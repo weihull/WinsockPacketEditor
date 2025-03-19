@@ -3,9 +3,9 @@ using System.Windows.Forms;
 using System.Data;
 using System.IO;
 using System.Drawing;
-using WinsockPacketEditor.Lib;
 using WPELibrary.Lib;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace WinsockPacketEditor
 {
@@ -16,28 +16,25 @@ namespace WinsockPacketEditor
         public ProcessList_Form()
         {           
             InitializeComponent();
-
-            try
-            {
-                dgvProcessList.AutoGenerateColumns = false;
-                dgvProcessList.GetType().GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(dgvProcessList, true, null);
-            }
-            catch(Exception ex)
-            {
-                string sError =ex.Message;
-            }
+            this.InitDGV();            
         }
 
-        private void ProcessList_Form_Load(object sender, EventArgs e)
+        private void InitDGV()
         {
-            this.ShowProcessList();
+            dgvProcessList.AutoGenerateColumns = false;
+            dgvProcessList.GetType().GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(dgvProcessList, true, null);
+        }
+
+        private async void ProcessList_Form_Load(object sender, EventArgs e)
+        {
+            await this.ShowProcessList();
         }
 
         #endregion      
 
         #region//显示所有进程（异步）
 
-        private void ShowProcessList()
+        private async Task ShowProcessList()
         {
             try
             {
@@ -47,66 +44,21 @@ namespace WinsockPacketEditor
                 this.txtProcessSearch.Enabled = false;
 
                 this.pbLoading.Visible = true;
-                this.dgvProcessList.Visible = false;             
+                this.dgvProcessList.Visible = false;
 
-                if (!bgwProcessList.IsBusy)
-                {
-                    bgwProcessList.RunWorkerAsync();
-                }
+                this.dgvProcessList.DataSource = await Socket_Operation.GetProcess();
+
+                this.bCreate.Enabled = true;
+                this.bRefresh.Enabled = true;
+                this.bSelected.Enabled = true;
+                this.txtProcessSearch.Enabled = true;
+
+                this.pbLoading.Visible = false;
+                this.dgvProcessList.Visible = true;             
             }
-            catch
+            catch (Exception ex)
             {
-                //
-            }
-        }
-
-        private void bgwProcessList_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
-        {
-            try
-            {
-                e.Result = Process_Injector.GetProcess();
-            }
-            catch
-            {
-                //
-            }
-        }
-
-        private void bgwProcessList_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                if (this.dgvProcessList.InvokeRequired)
-                {
-                    this.dgvProcessList.Invoke(new Action(() =>
-                    {                       
-                        this.dgvProcessList.DataSource = e.Result;                        
-
-                        this.bCreate.Enabled = true;
-                        this.bRefresh.Enabled = true;
-                        this.bSelected.Enabled = true;
-                        this.txtProcessSearch.Enabled = true;
-
-                        this.pbLoading.Visible = false;
-                        this.dgvProcessList.Visible = true;
-                    }));
-                }
-                else
-                {
-                    this.dgvProcessList.DataSource = e.Result;
-
-                    this.bCreate.Enabled = true;
-                    this.bRefresh.Enabled = true;
-                    this.bSelected.Enabled = true;
-                    this.txtProcessSearch.Enabled = true;
-
-                    this.pbLoading.Visible = false;
-                    this.dgvProcessList.Visible = true;
-                }
-            }
-            catch
-            {
-                //
+                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
         }
 
@@ -140,7 +92,7 @@ namespace WinsockPacketEditor
 
         #region//刷新进程列表
 
-        private void bRefresh_Click(object sender, EventArgs e)
+        private async void bRefresh_Click(object sender, EventArgs e)
         {
             try
             {
@@ -149,7 +101,7 @@ namespace WinsockPacketEditor
                 dgvProcessList.DataSource = dtClear;
 
                 this.txtProcessSearch.Text = string.Empty;
-                this.ShowProcessList();
+                await this.ShowProcessList();
             }
             catch
             {
@@ -241,19 +193,19 @@ namespace WinsockPacketEditor
 
                 if (String.IsNullOrEmpty(sSearchText))
                 {
-                    dgvProcessList.DataSource = Process_Injector.ProcessTable;
+                    dgvProcessList.DataSource = Socket_Operation.ProcessTable;
                 }
                 else
-                {                   
-                    DataView dvSearch = new DataView(Process_Injector.ProcessTable);
+                {
+                    DataView dvSearch = new DataView(Socket_Operation.ProcessTable);
                     dvSearch.RowFilter = "PName like '" + sSearchText + "%'";
                     dgvProcessList.DataSource = dvSearch.ToTable();
                 }
             }
             catch
-            { 
+            {
                 //
-            }
+            }                    
         }
 
         #endregion

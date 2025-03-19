@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.IO;
-using WinsockPacketEditor.Lib;
 using WPELibrary.Lib;
 using EasyHook;
 using System.Reflection;
-using System.Net;
 using System.Diagnostics;
 
 namespace WinsockPacketEditor
@@ -15,20 +13,19 @@ namespace WinsockPacketEditor
         private int ProcessID = -1;
         private string LastInjection = string.Empty;
         private string ProcessName = string.Empty;
-        private string ProcessPath = string.Empty;
+        private string ProcessPath = string.Empty;        
 
-        private ToolTip tt = new ToolTip();
+        private readonly ToolTip tt = new ToolTip();
 
         #region//窗体加载
 
         public Injector_Form()
-        {
-            Process_Injector.SetDefaultLanguage(Properties.Settings.Default.DefaultLanguage);
+        {            
             InitializeComponent();
 
             this.rtbLog.Clear();
             this.InitToolTip();
-            this.InitLastInjection();
+            this.InitLastInjection();            
         }
 
         private void InitToolTip()
@@ -36,11 +33,9 @@ namespace WinsockPacketEditor
             try
             {
                 tt.SetToolTip(bSelectProcess, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_1));
-                tt.SetToolTip(bInject, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_2));                
-                tt.SetToolTip(pbAbout, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_3));                
-                tt.SetToolTip(pbLanguage, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_4));
+                tt.SetToolTip(bInject, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_2));
                                 
-                ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_5), Process_Injector.AssemblyVersion));
+                ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_5), Socket_Operation.AssemblyVersion));
             }
             catch (Exception ex)
             {
@@ -132,7 +127,7 @@ namespace WinsockPacketEditor
 
         #endregion
 
-        #region//注入
+        #region//注入选择的进程
 
         private void bInject_Click(object sender, EventArgs e)
         {
@@ -163,78 +158,25 @@ namespace WinsockPacketEditor
                         RemoteHooking.CreateAndInject(ProcessPath, string.Empty, 0, injectionLibrary_x86, injectionLibrary_x64, out this.ProcessID, Properties.Settings.Default.DefaultLanguage);
                     }
 
-                    int targetPlat = Process_Injector.IsWin64Process(ProcessID) ? 64 : 32;
-                    
+                    int targetPlat = Socket_Operation.IsWin64Process(ProcessID) ? 64 : 32;
+
                     ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_8), targetPlat));                    
                     ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_9), ProcessName, ProcessID));
                     ShowLog(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_10));
 
-                    MultiLanguage.SetDefaultLanguage(Properties.Settings.Default.DefaultLanguage);
-
-                    this.SetLastInjection();
+                    this.SetLastInjection();                    
                 }
             }
             catch (Exception ex)
             {  
                 ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_11), ex.Message));
+                ShowLog(string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_102), Properties.Settings.Default.WPE64_URL));
             }
+
+            this.rtbLog.ScrollToCaret();
         }
 
-        #endregion        
-
-        #region//关于, 选择语言
-
-        private void pbAbout_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!bgwCheckURL.IsBusy)
-                {
-                    bgwCheckURL.RunWorkerAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowLog(ex.Message);
-            }
-        }        
-
-        private void pbLanguage_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                LanguageList_Form llf = new LanguageList_Form();
-                llf.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                ShowLog(ex.Message);
-            }            
-        }
-
-        private bool CheckWebSiteIsOK(string sURL)
-        {
-            bool bReturn = false;
-
-            try
-            {
-                HttpWebRequest hwr = (HttpWebRequest)WebRequest.Create(sURL);
-                HttpWebResponse resp = (HttpWebResponse)hwr.GetResponse();
-
-                if (resp.StatusCode == HttpStatusCode.OK)
-                {
-                    bReturn = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }        
-
-            return bReturn;
-        }
-
-        #endregion        
+        #endregion                
 
         #region//显示日志
 
@@ -257,41 +199,16 @@ namespace WinsockPacketEditor
             }
         }
 
-        #endregion
-
-        #region//检测并打开网站（异步）
-
-        private void bgwCheckURL_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e)
         {
             try
             {
-                e.Result = this.CheckWebSiteIsOK(Properties.Settings.Default.WPE64_URL);                
+                Process.Start(e.LinkText);
             }
             catch (Exception ex)
             {
-                ShowLog(ex.Message);
+                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
-        }
-
-        private void bgwCheckURL_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                bool bWPE64_URL = (bool)e.Result;
-
-                if (bWPE64_URL)
-                {
-                    Process.Start(Properties.Settings.Default.WPE64_URL);
-                }
-                else
-                {
-                    Process.Start(Properties.Settings.Default.WPE64_IP);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowLog(ex.Message);
-            }            
         }
 
         #endregion

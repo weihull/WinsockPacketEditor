@@ -65,16 +65,35 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsInput, Version=1.0.4.0, Culture=neutral, PublicKeyToken=9b287f7dc5073cad, processorArchitecture=MSIL">
+      <HintPath>..\packages\InputSimulator.1.0.4.0\lib\net20\WindowsInput.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Lib\IconExtractor\IconExtractor.cs" />
+    <Compile Include="Lib\IconExtractor\IconUtil.cs" />
+    <Compile Include="Lib\NativeMethods\Kernel32.cs" />
+    <Compile Include="Lib\NativeMethods\Mswsock.cs" />
+    <Compile Include="Lib\Socket_ProxyData.cs" />
+    <Compile Include="Lib\Socket_ProxyInfo.cs" />
     <Compile Include="Lib\Socket_BitInfo.cs" />
-    <Compile Include="Lib\User32.cs" />
-    <Compile Include="Lib\WS2_32.cs" />
-    <Compile Include="Lib\WSock32.cs" />
+    <Compile Include="Lib\Socket_Robot.cs" />
+    <Compile Include="Lib\Socket_RobotInfo.cs" />
+    <Compile Include="Lib\NativeMethods\User32.cs" />
+    <Compile Include="Lib\NativeMethods\WS2_32.cs" />
+    <Compile Include="Lib\NativeMethods\WSock32.cs" />
+    <Compile Include="Lib\Socket_Send.cs" />
+    <Compile Include="Lib\Socket_SendInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Socket_CompareForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Socket_CompareForm.Designer.cs">
+      <DependentUpon>Socket_CompareForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Socket_FilterForm.cs">
       <SubType>Form</SubType>
@@ -107,6 +126,18 @@
     <Compile Include="Lib\Socket_Cache.cs" />
     <Compile Include="Lib\WinSockHook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Socket_PasswordFrom.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Socket_PasswordFrom.Designer.cs">
+      <DependentUpon>Socket_PasswordFrom.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Socket_RobotForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Socket_RobotForm.Designer.cs">
+      <DependentUpon>Socket_RobotForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Socket_SendListForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -139,6 +170,11 @@
     <Content Include="EasyLoad64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Stop.png" />
+    <None Include="Resources\Start.png" />
+    <None Include="Resources\Compare.png" />
+    <None Include="Resources\off.png" />
+    <None Include="Resources\on.png" />
     <None Include="Resources\ForwardArrow.png" />
     <None Include="Resources\cpuinfo.png" />
     <None Include="Resources\aboutthis.png" />
@@ -202,6 +238,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Socket_CompareForm.en-US.resx">
+      <DependentUpon>Socket_CompareForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Socket_CompareForm.resx">
+      <DependentUpon>Socket_CompareForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Socket_FilterForm.en-US.resx">
       <DependentUpon>Socket_FilterForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -224,6 +266,19 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Socket_PasswordFrom.en-US.resx">
+      <DependentUpon>Socket_PasswordFrom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Socket_PasswordFrom.resx">
+      <DependentUpon>Socket_PasswordFrom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Socket_RobotForm.en-US.resx">
+      <DependentUpon>Socket_RobotForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Socket_RobotForm.resx">
+      <DependentUpon>Socket_RobotForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Socket_SendListForm.en-US.resx">
       <DependentUpon>Socket_SendListForm.cs</DependentUpon>

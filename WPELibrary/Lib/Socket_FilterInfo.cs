@@ -4,18 +4,6 @@ namespace WPELibrary.Lib
 {
     public class Socket_FilterInfo
     {
-        #region//序号
-
-        protected int fnum;
-
-        public int FNum
-        {
-            get { return fnum; }
-            set { fnum = value; }
-        }
-
-        #endregion
-
         #region//是否启用
 
         protected bool isenable;
@@ -27,6 +15,18 @@ namespace WPELibrary.Lib
         }
 
         #endregion
+
+        #region//序号
+
+        protected Guid fid;
+
+        public Guid FID
+        {
+            get { return fid; }
+            set { fid = value; }
+        }
+
+        #endregion        
 
         #region//滤镜名称
 
@@ -40,7 +40,7 @@ namespace WPELibrary.Lib
 
         #endregion
 
-        #region//是否指定包头
+        #region//指定包头
 
         protected bool appointheader;
 
@@ -49,10 +49,6 @@ namespace WPELibrary.Lib
             get { return appointheader; }
             set { appointheader = value; }
         }
-
-        #endregion
-
-        #region//包头内容
 
         protected string headercontent;
 
@@ -63,6 +59,46 @@ namespace WPELibrary.Lib
         }
 
         #endregion        
+
+        #region//指定套接字
+
+        protected bool appointsocket;
+
+        public bool AppointSocket
+        {
+            get { return appointsocket; }
+            set { appointsocket = value; }
+        }
+
+        protected decimal socketcontent;
+
+        public decimal SocketContent
+        {
+            get { return socketcontent; }
+            set { socketcontent = value; }
+        }
+
+        #endregion
+
+        #region//指定长度
+
+        protected bool appointlength;
+
+        public bool AppointLength
+        {
+            get { return appointlength; }
+            set { appointlength = value; }
+        }
+
+        protected decimal lengthcontent;
+
+        public decimal LengthContent
+        {
+            get { return lengthcontent; }
+            set { lengthcontent = value; }
+        }
+
+        #endregion
 
         #region//模式
 
@@ -84,6 +120,30 @@ namespace WPELibrary.Lib
         {
             get { return faction; }
             set { faction = value; }
+        }
+
+        #endregion        
+
+        #region//是否执行机器人
+
+        protected bool isexecute;
+
+        public bool IsExecute
+        {
+            get { return isexecute; }
+            set { isexecute = value; }
+        }
+
+        #endregion
+
+        #region//机器人序号
+
+        protected Guid rid;
+
+        public Guid RID
+        {
+            get { return rid; }
+            set { rid = value; }
         }
 
         #endregion        
@@ -110,7 +170,55 @@ namespace WPELibrary.Lib
             set { fstartfrom = value; }
         }
 
-        #endregion        
+        #endregion
+
+        #region//是否递进完成
+
+        protected bool isprogressiondone;
+
+        public bool IsProgressionDone
+        {
+            get { return isprogressiondone; }
+            set { isprogressiondone = value; }
+        }
+
+        #endregion
+
+        #region//递进步长
+
+        protected decimal progressionstep;
+
+        public decimal ProgressionStep
+        {
+            get { return progressionstep; }
+            set { progressionstep = value; }
+        }
+
+        #endregion
+
+        #region//递进位置
+
+        protected string progressionposition;
+
+        public string ProgressionPosition
+        {
+            get { return progressionposition; }
+            set { progressionposition = value; }
+        }
+
+        #endregion
+
+        #region//递进已执行次数
+
+        protected int progressioncount;
+
+        public int ProgressionCount
+        {
+            get { return progressioncount; }
+            set { progressioncount = value; }
+        }
+
+        #endregion
 
         #region//搜索内容
 
@@ -138,17 +246,48 @@ namespace WPELibrary.Lib
 
         #region//Socket_FilterInfo
 
-        public Socket_FilterInfo(bool IsEnable, int FNum, string FName, bool AppointHeader, string HeaderContent, Socket_Cache.Filter.FilterMode FMode, Socket_Cache.Filter.FilterAction FAction, Socket_Cache.Filter.FilterFunction FFunction, Socket_Cache.Filter.FilterStartFrom FStartFrom, string FSearch, string FModify) 
+        public Socket_FilterInfo(
+            bool IsEnable, 
+            Guid FID, 
+            string FName, 
+            bool AppointHeader, 
+            string HeaderContent, 
+            bool AppointSocket, 
+            decimal SocketContent, 
+            bool AppointLength, 
+            decimal LengthContent, 
+            Socket_Cache.Filter.FilterMode FMode, 
+            Socket_Cache.Filter.FilterAction FAction,
+            bool IsExecute,
+            Guid RID,
+            Socket_Cache.Filter.FilterFunction FFunction, 
+            Socket_Cache.Filter.FilterStartFrom FStartFrom,
+            bool IsProgressionDone,
+            decimal ProgressionStep,
+            string ProgressionPosition,
+            int ProgressionCount,
+            string FSearch, 
+            string FModify) 
         {
             this.isenable = IsEnable;
-            this.fnum = FNum;            
+            this.fid = FID;            
             this.fname = FName;
             this.appointheader = AppointHeader;
             this.headercontent = HeaderContent;
+            this.appointsocket = AppointSocket;
+            this.socketcontent = SocketContent;
+            this.appointlength = AppointLength;
+            this.lengthcontent = LengthContent;
             this.fmode = FMode;
             this.faction = FAction;
+            this.isexecute = IsExecute;
+            this.rid = RID;
             this.ffunction = FFunction;
-            this.fstartfrom = FStartFrom;            
+            this.fstartfrom = FStartFrom;
+            this.isprogressiondone = IsProgressionDone;
+            this.progressionstep = ProgressionStep;
+            this.progressionposition = ProgressionPosition;
+            this.progressioncount = ProgressionCount;
             this.fsearch = FSearch;          
             this.fmodify = FModify;         
         }

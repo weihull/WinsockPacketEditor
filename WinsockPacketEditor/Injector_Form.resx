@@ -122,7 +122,7 @@
     <value>1</value>
   </data>
   <data name="tlpProcessInject.ColumnCount" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="lProcessName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -145,16 +145,16 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="lProcessName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 23</value>
+    <value>59, 23</value>
   </data>
   <data name="lProcessName.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="lProcessName.Text" xml:space="preserve">
-    <value>进程名称：</value>
+    <value>进程名称:</value>
   </data>
   <data name="lProcessName.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleCenter</value>
+    <value>MiddleLeft</value>
   </data>
   <data name="&gt;&gt;lProcessName.Name" xml:space="preserve">
     <value>lProcessName</value>
@@ -175,10 +175,10 @@
     <value>微软雅黑, 9pt</value>
   </data>
   <data name="tbProcessID.Location" type="System.Drawing.Point, System.Drawing">
-    <value>83, 3</value>
+    <value>68, 3</value>
   </data>
   <data name="tbProcessID.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 23</value>
+    <value>217, 23</value>
   </data>
   <data name="tbProcessID.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -202,7 +202,7 @@
     <value>NoControl</value>
   </data>
   <data name="bSelectProcess.Location" type="System.Drawing.Point, System.Drawing">
-    <value>277, 2</value>
+    <value>290, 2</value>
   </data>
   <data name="bSelectProcess.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -235,7 +235,7 @@
     <value>NoControl</value>
   </data>
   <data name="bInject.Location" type="System.Drawing.Point, System.Drawing">
-    <value>327, 2</value>
+    <value>340, 2</value>
   </data>
   <data name="bInject.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -261,66 +261,6 @@
   <data name="&gt;&gt;bInject.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="pbLanguage.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="pbLanguage.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="pbLanguage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>418, 3</value>
-  </data>
-  <data name="pbLanguage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 23</value>
-  </data>
-  <data name="pbLanguage.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
-    <value>Zoom</value>
-  </data>
-  <data name="pbLanguage.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;pbLanguage.Name" xml:space="preserve">
-    <value>pbLanguage</value>
-  </data>
-  <data name="&gt;&gt;pbLanguage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;pbLanguage.Parent" xml:space="preserve">
-    <value>tlpProcessInject</value>
-  </data>
-  <data name="&gt;&gt;pbLanguage.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="pbAbout.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="pbAbout.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="pbAbout.Location" type="System.Drawing.Point, System.Drawing">
-    <value>453, 3</value>
-  </data>
-  <data name="pbAbout.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 23</value>
-  </data>
-  <data name="pbAbout.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
-    <value>Zoom</value>
-  </data>
-  <data name="pbAbout.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;pbAbout.Name" xml:space="preserve">
-    <value>pbAbout</value>
-  </data>
-  <data name="&gt;&gt;pbAbout.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;pbAbout.Parent" xml:space="preserve">
-    <value>tlpProcessInject</value>
-  </data>
-  <data name="&gt;&gt;pbAbout.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="tlpProcessInject.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -334,7 +274,7 @@
     <value>1</value>
   </data>
   <data name="tlpProcessInject.Size" type="System.Drawing.Size, System.Drawing">
-    <value>485, 29</value>
+    <value>428, 29</value>
   </data>
   <data name="tlpProcessInject.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -352,7 +292,7 @@
     <value>0</value>
   </data>
   <data name="tlpProcessInject.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="lProcessName" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="tbProcessID" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="bSelectProcess" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="bInject" Row="0" RowSpan="1" Column="3" ColumnSpan="1" /&gt;&lt;Control Name="pbLanguage" Row="0" RowSpan="1" Column="4" ColumnSpan="1" /&gt;&lt;Control Name="pbAbout" Row="0" RowSpan="1" Column="5" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,80,Percent,100,Absolute,50,Absolute,90,Absolute,35,Absolute,35" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="lProcessName" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="tbProcessID" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="bSelectProcess" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="bInject" Row="0" RowSpan="1" Column="3" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100,Absolute,50,Absolute,90" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="rtbLog.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -364,7 +304,7 @@
     <value>3, 43</value>
   </data>
   <data name="rtbLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>485, 143</value>
+    <value>428, 145</value>
   </data>
   <data name="rtbLog.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -397,7 +337,7 @@
     <value>3</value>
   </data>
   <data name="tlpInjectorForm.Size" type="System.Drawing.Size, System.Drawing">
-    <value>491, 189</value>
+    <value>434, 191</value>
   </data>
   <data name="tlpInjectorForm.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -417,9 +357,6 @@
   <data name="tlpInjectorForm.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="tlpProcessInject" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="rtbLog" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="Absolute,5,Absolute,35,Percent,100,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
-  <metadata name="bgwCheckURL.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -430,7 +367,7 @@
     <value>96, 96</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>491, 189</value>
+    <value>434, 191</value>
   </data>
   <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
     <value>微软雅黑, 9pt</value>
@@ -6615,12 +6552,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>进程注入器</value>
-  </data>
-  <data name="&gt;&gt;bgwCheckURL.Name" xml:space="preserve">
-    <value>bgwCheckURL</value>
-  </data>
-  <data name="&gt;&gt;bgwCheckURL.Type" xml:space="preserve">
-    <value>System.ComponentModel.BackgroundWorker, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>Injector_Form</value>
