@@ -40,7 +40,7 @@ namespace WPELibrary.Lib
         public static string[] MutiLan_28 = { "数据加载出错!", "Data loading error!" };
         public static string[] MutiLan_29 = { "两个数据相同!", "The two data are the same!" };
         public static string[] MutiLan_30 = { "请正确设置查找内容！", "Please set the Find content correctly!" };
-        public static string[] MutiLan_31 = { "已发送: {0}  已接收: {1}", "Sent: {0} Received: {1}" };
+        public static string[] MutiLan_31 = { "发送: {0}  接收: {1}", "Sent: {0} Received: {1}" };
         public static string[] MutiLan_32 = { "发送 - [{0}]", "Send - [{0}]" };
         public static string[] MutiLan_33 = { "文本 A  ( 长度 {0} )", "Text A  ( Length {0} )" };
         public static string[] MutiLan_34 = { "文本 B  ( 长度 {0} )", "Text B  ( Length {0} )" };
@@ -52,7 +52,7 @@ namespace WPELibrary.Lib
         public static string[] MutiLan_40 = { "结束拦截!", "Stop Intercepting!" };
         public static string[] MutiLan_41 = { "已开启极速模式!", "Speed mode has been activated!" };
         public static string[] MutiLan_42 = { "粘贴的不是有效的十六进制数据!", "The pasted data is not valid hex data!" };
-        public static string[] MutiLan_43 = { "已请求: {0}  已响应: {1}", "Request: {0} Response: {1}" };
+        public static string[] MutiLan_43 = { "请求: {0}  响应: {1}", "Request: {0} Response: {1}" };
         public static string[] MutiLan_44 = { "请正确设置递进位置", "Please set the progressive position correctly" };
         public static string[] MutiLan_45 = { "套接字设置错误", "Socket setting error" };
         public static string[] MutiLan_46 = { "封包数据错误", "Packet data error" };
@@ -155,8 +155,8 @@ namespace WPELibrary.Lib
         public static string[] MutiLan_143 = { "停止 SOCKS5 代理!", "Stop SOCKS5 proxy!" };
         public static string[] MutiLan_144 = { "{0} 句柄: {1}", "{0} Handle: {1}" };
         public static string[] MutiLan_145 = { "不支持的 SOCKS 协议版本: {0}", "Unsupported SOCKS protocol version: {0}" };
-        public static string[] MutiLan_146 = { "{0} 不支持认证方式: {1}", "{0} does not support the authentication: {1}" };
-        public static string[] MutiLan_147 = { "{0} 认证失败!", "{0} authentication failed!" };
+        //public static string[] MutiLan_146 = { "远程管理网址:", "Remote MGT:" };
+        //public static string[] MutiLan_147 = { "失败!", "Failed!" };
         public static string[] MutiLan_148 = { "启用系统代理", "Enable system proxy" };
         public static string[] MutiLan_149 = { "关闭系统代理", "Disable system proxy" };
         public static string[] MutiLan_150 = { "封包列表保存完毕 {0}", "The Socket List saved {0}" };
@@ -181,6 +181,30 @@ namespace WPELibrary.Lib
         public static string[] MutiLan_169 = { "已启用身份认证！", "Identity authentication enabled!" };
         public static string[] MutiLan_170 = { "已启用外部 HTTP 代理！", "External HTTP proxy enabled!" };
         public static string[] MutiLan_171 = { "已启用外部 HTTPS 代理！", "External HTTPS proxy enabled!" };
+        public static string[] MutiLan_172 = { "上行: {0} KB/s 下行: {1} KB/s", "Uplink: {0} KB/s Downlink: {1} KB/s" };
+        public static string[] MutiLan_173 = { "换包", "Change" };
+        public static string[] MutiLan_174 = { "换包数据不完整!", "The change packet data is incomplete!" };
+        public static string[] MutiLan_175 = { "正在加载滤镜数据: {0}%", "Loading Filter data: {0}%" };
+        public static string[] MutiLan_176 = { "账号信息设置错误!", "Account information setting error!" };
+        public static string[] MutiLan_177 = { "该用户名已存在!", "This UserName has already exists!" };
+        public static string[] MutiLan_178 = { "远程管理已启用：{0}", "Remote MGT enabled: {0}" };
+        public static string[] MutiLan_179 = { "远程管理启动失败: 请使用管理员权限启动 {0}", "Remote MGT startup failed: please use admin to start {0}" };
+        public static string[] MutiLan_180 = { "管理账号密码不能为空!", "The Username and Password cannot be Empty!" };
+        public static string[] MutiLan_181 = { "添加账号失败!", "Failed to Add account!" };
+        public static string[] MutiLan_182 = { "删除账号失败!", "Failed to Delete account!" };
+        public static string[] MutiLan_183 = { "添加账号成功!", "Account added successfully!" };
+        public static string[] MutiLan_184 = { "删除账号成功!", "Account deleted successfully!" };
+        public static string[] MutiLan_185 = { "代理模式", "Proxy Mode" };
+        public static string[] MutiLan_186 = { "注入模式", "Injection Mode" };
+        public static string[] MutiLan_187 = { "极速模式", "Speed Mode" };
+        public static string[] MutiLan_188 = { "普通模式", "Normal Mode" };
+        public static string[] MutiLan_189 = { "代理账号列表文件", "Proxy Account List file" };
+        public static string[] MutiLan_190 = { "代理账号列表保存完毕 {0}", "The Proxy Account List saved {0}" };
+        public static string[] MutiLan_191 = { "加载代理账号列表成功! [未加密]", "Load Proxy Account list successful! [Unencrypted]" };
+        public static string[] MutiLan_192 = { "加载代理账号列表成功! [已加密]", "Load Proxy Account list successful! [Encrypted]" };
+        public static string[] MutiLan_193 = { "导入账号失败！用户名：{0}", "Import account failed! Username: {0}" };
+        public static string[] MutiLan_194 = { "更新账号成功!", "Account Update successfully!" };
+        public static string[] MutiLan_195 = { "更新账号失败!", "Failed to Update Account!" };
 
         #endregion
 
@@ -205,27 +229,25 @@ namespace WPELibrary.Lib
 
         public static string GetDefaultLanguage(string[] MutiLanID)
         {
-            string sReturn = string.Empty;
-
             try
             {
                 switch (DefaultLanguage)
                 {
                     case "zh-CN":
-                        sReturn = MutiLanID[0].ToString();
-                        break;
+                        return MutiLanID[0];
 
                     case "en-US":
-                        sReturn = MutiLanID[1].ToString();
-                        break;
+                        return MutiLanID[1];
+
+                    default:
+                        return string.Empty;
                 }
             }
             catch (Exception ex)
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
+                return string.Empty;
             }
-
-            return sReturn;
         }
 
         #endregion

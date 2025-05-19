@@ -3,17 +3,21 @@ using System.Drawing;
 using System.Windows.Forms;
 using WPELibrary.Lib;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Text;
 
 namespace WPELibrary
 {
     public partial class Socket_FilterForm : Form
     {  
         private int FilterIndex = -1;
-        private decimal FilterSocketContent = 1;
-        private decimal FilterLengthContent = 1;
+        private int LoadAllCount = 0;        
+        private decimal FilterSocketContent = 1;        
+        private decimal FilterPortContent = 1;
         private decimal FilterProgressionStep = 1;
         private string FilterName = string.Empty;
         private string FilterHeaderContent = string.Empty;
+        private string FilterLengthContent = string.Empty;
         private string FilterProgressionPosition = string.Empty;
         private string FilterSearch = string.Empty;
         private string FilterModify = string.Empty;
@@ -21,8 +25,11 @@ namespace WPELibrary
         private bool FilterAppointHeader = false;
         private bool FilterAppointSocket = false;
         private bool FilterAppointLength = false;
+        private bool FilterAppointPort = false;
         private Socket_Cache.Filter.FilterMode FilterMode;
         private Socket_Cache.Filter.FilterAction FilterAction;
+        private Socket_Cache.Filter.FilterExecuteType FilterExecuteType;
+        private Guid SID = Guid.Empty;
         private Guid RID = Guid.Empty;
         private Socket_Cache.Filter.FilterFunction FilterFunction;        
         private Socket_Cache.Filter.FilterStartFrom FilterStartFrom;
@@ -42,7 +49,15 @@ namespace WPELibrary
 
                     this.InitFrom();
                     this.InitDGV();
-                    this.ShowFilterInfo();
+
+                    if (!this.bgwFilterInfo.IsBusy)
+                    {
+                        this.bFilterButton_Save.Enabled = false;
+                        this.tcFilterInfo.Enabled = false;
+                        this.lFilterInfo.Visible = true;
+
+                        this.bgwFilterInfo.RunWorkerAsync();
+                    }                    
                 }
                 else
                 {
@@ -66,6 +81,7 @@ namespace WPELibrary
             {
                 string sFID = Socket_Cache.FilterList.lstFilter[FilterIndex].FID.ToString().ToUpper();
                 this.Text = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_16), (FilterIndex + 1), sFID);
+                this.lFilterInfo.Text = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_175), "0");
 
                 this.FilterName = Socket_Cache.FilterList.lstFilter[FilterIndex].FName;
                 this.FilterAppointHeader = Socket_Cache.FilterList.lstFilter[FilterIndex].AppointHeader;
@@ -74,9 +90,13 @@ namespace WPELibrary
                 this.FilterSocketContent = Socket_Cache.FilterList.lstFilter[FilterIndex].SocketContent;
                 this.FilterAppointLength = Socket_Cache.FilterList.lstFilter[FilterIndex].AppointLength;
                 this.FilterLengthContent = Socket_Cache.FilterList.lstFilter[FilterIndex].LengthContent;
+                this.FilterAppointPort = Socket_Cache.FilterList.lstFilter[FilterIndex].AppointPort;
+                this.FilterPortContent = Socket_Cache.FilterList.lstFilter[FilterIndex].PortContent;
                 this.FilterMode = Socket_Cache.FilterList.lstFilter[FilterIndex].FMode;
                 this.FilterAction = Socket_Cache.FilterList.lstFilter[FilterIndex].FAction;
                 this.IsExecute = Socket_Cache.FilterList.lstFilter[FilterIndex].IsExecute;
+                this.FilterExecuteType = Socket_Cache.FilterList.lstFilter[FilterIndex].FEType;
+                this.SID = Socket_Cache.FilterList.lstFilter[FilterIndex].SID;
                 this.RID = Socket_Cache.FilterList.lstFilter[FilterIndex].RID;
                 this.FilterFunction = Socket_Cache.FilterList.lstFilter[FilterIndex].FFunction;
                 this.FilterStartFrom = Socket_Cache.FilterList.lstFilter[FilterIndex].FStartFrom;
@@ -107,6 +127,10 @@ namespace WPELibrary
                         this.rbFilterAction_Intercept.Checked = true;
                         break;
 
+                    case Socket_Cache.Filter.FilterAction.Change:
+                        this.rbFilterAction_Change.Checked = true;
+                        break;
+
                     case Socket_Cache.Filter.FilterAction.NoModify_Display:
                         this.rbFilterAction_NoModify_Display.Checked = true;
                         break;
@@ -131,6 +155,18 @@ namespace WPELibrary
                 this.cbFilterAction_Execute.Checked = IsExecute;
                 this.FilterAction_ExecuteChange();
 
+                switch (FilterExecuteType)
+                { 
+                    case Socket_Cache.Filter.FilterExecuteType.Send:
+                        this.cbbFilterAction_ExecuteType.SelectedIndex = 0;
+                        break;
+
+                    case Socket_Cache.Filter.FilterExecuteType.Robot:
+                        this.cbbFilterAction_ExecuteType.SelectedIndex = 1;
+                        break;
+                }
+                this.FilterAction_ExecuteTypeChanged();
+
                 this.cbFilter_AppointHeader.Checked = FilterAppointHeader;
                 this.txtFilter_HeaderContent.Text = FilterHeaderContent;
                 this.FilterAppointHeaderChange();
@@ -140,8 +176,36 @@ namespace WPELibrary
                 this.FilterAppointSocketChange();
 
                 this.cbFilter_AppointLength.Checked = FilterAppointLength;
-                this.nudFilter_LengthContent.Value = FilterLengthContent;
+                if (!string.IsNullOrEmpty(this.FilterLengthContent))
+                {
+                    if (this.FilterLengthContent.Contains("-"))
+                    {
+                        string[] sLengthContent = this.FilterLengthContent.Split('-');
+
+                        if (int.TryParse(sLengthContent[0], out int iLenFrom))
+                        {
+                            this.nudFilter_LengthContent_From.Value = iLenFrom;
+                        }
+
+                        if (int.TryParse(sLengthContent[1], out int iLenTo))
+                        {
+                            this.nudFilter_LengthContent_To.Value = iLenTo;
+                        }
+                    }
+                    else
+                    {
+                        if (int.TryParse(this.FilterLengthContent, out int iLength))
+                        {
+                            this.nudFilter_LengthContent_From.Value = iLength;
+                            this.nudFilter_LengthContent_To.Value = iLength;
+                        }
+                    }                    
+                }                
                 this.FilterAppointLengthChange();
+
+                this.cbFilter_AppointPort.Checked = FilterAppointPort;
+                this.nudFilter_PortContent.Value = FilterPortContent;
+                this.FilterAppointPortChange();
 
                 this.nudProgressionStep.Value = FilterProgressionStep;
 
@@ -153,9 +217,7 @@ namespace WPELibrary
                 this.cbFilterFunction_WSASend.Checked = FilterFunction.WSASend;
                 this.cbFilterFunction_WSASendTo.Checked = FilterFunction.WSASendTo;
                 this.cbFilterFunction_WSARecv.Checked = FilterFunction.WSARecv;
-                this.cbFilterFunction_WSARecvFrom.Checked = FilterFunction.WSARecvFrom;
-
-                this.InitRobotInfo();
+                this.cbFilterFunction_WSARecvFrom.Checked = FilterFunction.WSARecvFrom;                
             }
             catch (Exception ex)
             {
@@ -299,12 +361,7 @@ namespace WPELibrary
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
-        }
-
-        private void dgvFilterAdvanced_Modify_FromPosition_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
-        {
-            e.Column.FillWeight = 50;
-        }
+        }        
 
         private void InitDGV_Advanced_Modify_Position()
         {
@@ -396,6 +453,63 @@ namespace WPELibrary
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
+        }        
+
+        #endregion
+
+        #region//滤镜动作-执行
+
+        private void cbFilterAction_Execute_CheckedChanged(object sender, EventArgs e)
+        {
+            this.FilterAction_ExecuteChange();
+        }      
+
+        private void FilterAction_ExecuteChange()
+        {
+            this.cbbFilterAction_Execute.Enabled = this.cbbFilterAction_ExecuteType.Enabled = cbFilterAction_Execute.Checked;            
+        }
+
+        private void cbbFilterAction_ExecuteType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.FilterAction_ExecuteTypeChanged();
+        }
+
+        private void FilterAction_ExecuteTypeChanged()
+        {
+            try
+            {
+                if (this.cbbFilterAction_ExecuteType.SelectedIndex == 0)
+                {
+                    this.InitSendInfo();
+                }
+                else
+                {
+                    this.InitRobotInfo();
+                }
+            }
+            catch (Exception ex)
+            {
+                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
+            }
+        }
+
+        private void InitSendInfo()
+        {
+            try
+            {
+                if (Socket_Cache.SendList.lstSend.Count > 0)
+                {
+                    cbbFilterAction_Execute.DataSource = Socket_Cache.SendList.lstSend;
+                    cbbFilterAction_Execute.DisplayMember = "SName";
+                    cbbFilterAction_Execute.ValueMember = "SID";
+
+                    this.cbbFilterAction_Execute.SelectedValue = this.SID;
+                }
+            }
+            catch (Exception ex)
+            {
+                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
+            }
         }
 
         private void InitRobotInfo()
@@ -409,34 +523,6 @@ namespace WPELibrary
                     cbbFilterAction_Execute.ValueMember = "RID";
 
                     this.cbbFilterAction_Execute.SelectedValue = this.RID;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
-        }
-
-        #endregion
-
-        #region//机器人信息
-
-        private void cbFilterAction_Execute_CheckedChanged(object sender, EventArgs e)
-        {
-            this.FilterAction_ExecuteChange();
-        }      
-
-        private void FilterAction_ExecuteChange()
-        {
-            try
-            {
-                if (cbFilterAction_Execute.Checked)
-                {
-                    this.cbbFilterAction_Execute.Enabled = true;
-                }
-                else
-                {
-                    this.cbbFilterAction_Execute.Enabled = false;
                 }
             }
             catch (Exception ex)
@@ -511,21 +597,18 @@ namespace WPELibrary
 
         #endregion
 
-        #region//指定类型        
+        #region//指定类型
+
+        #region//指定包头
 
         private void cbFilter_AppointHeader_CheckedChanged(object sender, EventArgs e)
         {
             this.FilterAppointHeaderChange();
         }
 
-        private void cbFilter_AppointSocket_CheckedChanged(object sender, EventArgs e)
+        private void FilterAppointHeaderChange()
         {
-            this.FilterAppointSocketChange();
-        }
-
-        private void cbFilter_AppointLength_CheckedChanged(object sender, EventArgs e)
-        {
-            this.FilterAppointLengthChange();
+            this.txtFilter_HeaderContent.Enabled = this.cbFilter_AppointHeader.Checked;
         }
 
         private void txtFilter_HeaderContent_KeyPress(object sender, KeyPressEventArgs e)
@@ -543,66 +626,70 @@ namespace WPELibrary
             }
         }
 
-        private void FilterAppointHeaderChange()
+        #endregion
+
+        #region//指定套接字
+
+        private void cbFilter_AppointSocket_CheckedChanged(object sender, EventArgs e)
         {
-            try
-            {
-                if (this.cbFilter_AppointHeader.Checked)
-                {
-                    this.txtFilter_HeaderContent.Enabled = true;
-                }
-                else
-                {
-                    this.txtFilter_HeaderContent.Enabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
+            this.FilterAppointSocketChange();
         }
 
         private void FilterAppointSocketChange()
         {
-            try
-            {
-                if (this.cbFilter_AppointSocket.Checked)
-                {
-                    this.nudFilter_SocketContent.Enabled = true;
-                }
-                else
-                {
-                    this.nudFilter_SocketContent.Enabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
-        }
-
-        private void FilterAppointLengthChange()
-        {
-            try
-            {
-                if (this.cbFilter_AppointLength.Checked)
-                {
-                    this.nudFilter_LengthContent.Enabled = true;
-                }
-                else
-                {
-                    this.nudFilter_LengthContent.Enabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
+            this.nudFilter_SocketContent.Enabled = this.cbFilter_AppointSocket.Checked;
         }
 
         #endregion
 
-        #region//显示滤镜内容
+        #region//指定长度
+
+        private void cbFilter_AppointLength_CheckedChanged(object sender, EventArgs e)
+        {
+            this.FilterAppointLengthChange();
+        }
+
+        private void FilterAppointLengthChange()
+        {
+            this.nudFilter_LengthContent_From.Enabled = this.nudFilter_LengthContent_To.Enabled = this.cbFilter_AppointLength.Checked;
+        }
+
+        #endregion
+
+        #region//指定端口
+
+        private void cbFilter_AppointPort_CheckedChanged(object sender, EventArgs e)
+        {
+            this.FilterAppointPortChange();
+        }
+
+        private void FilterAppointPortChange()
+        {
+            this.nudFilter_PortContent.Enabled = this.cbFilter_AppointPort.Checked;
+        }
+
+        #endregion
+
+        #endregion
+
+        #region//显示滤镜内容（异步）
+
+        private void bgwFilterInfo_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            this.ShowFilterInfo();
+        }
+
+        private void bgwFilterInfo_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            this.lFilterInfo.Text = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_175), e.ProgressPercentage.ToString());
+        }
+
+        private void bgwFilterInfo_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            this.lFilterInfo.Visible = false;
+            this.tcFilterInfo.Enabled = true;
+            this.bFilterButton_Save.Enabled = true;
+        }
 
         private void ShowFilterInfo()
         {
@@ -640,7 +727,9 @@ namespace WPELibrary
                 if (!string.IsNullOrEmpty(FilterModify))
                 {
                     string[] sModifyAll = FilterModify.Split(',');
+                    this.LoadAllCount = sModifyAll.Length;
 
+                    int LoadCount = 0;
                     foreach (string s in sModifyAll)
                     {
                         if (int.TryParse(s.Split('|')[0], out int iIndex))
@@ -684,8 +773,11 @@ namespace WPELibrary
                                                 iIndex += Socket_Cache.Filter.FilterSize_MaxLen;
 
                                                 if (iIndex < this.dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells.Count)
-                                                {
+                                                {                                                    
                                                     this.dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[iIndex].Value = sValue;
+
+                                                    LoadCount++;
+                                                    this.bgwFilterInfo.ReportProgress(LoadCount * 100 / LoadAllCount);
                                                 }
                                             }
 
@@ -694,7 +786,7 @@ namespace WPELibrary
 
                                     break;
                             }
-                        }                                                
+                        }
                     }
                 }
             }
@@ -718,6 +810,87 @@ namespace WPELibrary
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
+        }
+
+        #endregion        
+
+        #region//粘贴数据（异步）
+
+        private void dgvFilterNormal_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                string sClipboardText = Clipboard.GetText().Trim();
+                this.PastePacketData(dgvFilterNormal, sClipboardText);
+            }
+        }
+
+        private void dgvFilterAdvanced_Search_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                string sClipboardText = Clipboard.GetText().Trim();
+                this.PastePacketData(dgvFilterAdvanced_Search, sClipboardText);
+            }
+        }
+
+        private void dgvFilterAdvanced_Modify_FromHead_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                string sClipboardText = Clipboard.GetText().Trim();
+                this.PastePacketData(dgvFilterAdvanced_Modify_FromHead, sClipboardText);
+            }
+        }
+
+        private void dgvFilterAdvanced_Modify_FromPosition_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                string sClipboardText = Clipboard.GetText().Trim();
+                this.PastePacketData(dgvFilterAdvanced_Modify_FromPosition, sClipboardText);
+            }
+        }
+
+        private async void PastePacketData(DataGridView dgv, string sData)
+        {
+            this.bFilterButton_Save.Enabled = false;
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(sData) && Socket_Operation.IsHexString(sData))
+                    {
+                        string[] DataCells = sData.Split(' ');
+
+                        int iRow = dgv.CurrentCell.RowIndex;
+                        int iCol = dgv.CurrentCell.ColumnIndex;
+
+                        for (int i = 0; i < DataCells.Length; i++)
+                        {
+                            if (iCol + i < dgv.ColumnCount)
+                            {
+                                dgv[iCol + i, iRow].Value = Convert.ChangeType(DataCells[i].ToUpper(), dgv[iCol + i, iRow].ValueType);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_42));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
+                }
+            });
+
+            this.bFilterButton_Save.Enabled = true;
         }
 
         #endregion
@@ -805,6 +978,107 @@ namespace WPELibrary
                         }
                     }
                 }
+
+                //换包（数据完整度检测）
+                if (this.rbFilterAction_Change.Checked)
+                {
+                    int iMaxIndex = 0;
+
+                    //普通滤镜
+                    if (this.rbFilterMode_Normal.Checked)
+                    {
+                        for (int i = 0; i < this.dgvFilterNormal.Columns.Count; i++)
+                        {
+                            if (dgvFilterNormal.Rows[1].Cells[i].Value != null)
+                            {
+                                sCheckValue = dgvFilterNormal.Rows[1].Cells[i].Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(sCheckValue))
+                                {
+                                    iMaxIndex = i;
+                                }
+                            }
+                        }
+
+                        if (iMaxIndex == 0)
+                        {
+                            Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                            return false;
+                        }
+
+                        for (int i = 0; i < iMaxIndex; i++)
+                        {
+                            if (dgvFilterNormal.Rows[1].Cells[i].Value == null)
+                            {
+                                Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                                return false;
+                            }
+                        }
+                    }
+
+                    //高级滤镜（从头开始）
+                    if (this.rbFilterMode_Advanced.Checked && this.rbFilterModifyFrom_Head.Checked)
+                    {
+                        for (int i = 0; i < this.dgvFilterAdvanced_Modify_FromHead.Columns.Count; i++)
+                        {
+                            if (dgvFilterAdvanced_Modify_FromHead.Rows[0].Cells[i].Value != null)
+                            {
+                                sCheckValue = dgvFilterAdvanced_Modify_FromHead.Rows[0].Cells[i].Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(sCheckValue))
+                                {
+                                    iMaxIndex = i;
+                                }
+                            }
+                        }
+
+                        if (iMaxIndex == 0)
+                        {
+                            Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                            return false;
+                        }
+
+                        for (int i = 0; i < iMaxIndex; i++)
+                        {
+                            if (dgvFilterAdvanced_Modify_FromHead.Rows[0].Cells[i].Value == null)
+                            {
+                                Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                                return false;
+                            }
+                        }
+                    }
+
+                    //高级滤镜（从发现有连锁的位置）
+                    if (this.rbFilterMode_Advanced.Checked && this.rbFilterModifyFrom_Position.Checked)
+                    {
+                        int iStartIndex = Socket_Cache.Filter.FilterSize_MaxLen;
+
+                        for (int i = iStartIndex; i < this.dgvFilterAdvanced_Modify_FromPosition.Columns.Count; i++)
+                        {
+                            if (dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Value != null)
+                            {
+                                sCheckValue = dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Value.ToString().Trim();
+                                if (!string.IsNullOrEmpty(sCheckValue))
+                                {
+                                    iMaxIndex = i;
+                                }
+                            }
+                        }
+
+                        if (iMaxIndex == iStartIndex)
+                        {
+                            Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                            return false;
+                        }
+
+                        for (int i = iStartIndex; i < iMaxIndex; i++)
+                        {
+                            if (dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Value == null)
+                            {
+                                Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_174));
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -835,17 +1109,21 @@ namespace WPELibrary
                 {
                     string sFName_New = this.txtFilterName.Text.Trim();
                     string sHeaderContent_New = string.Empty;
-                    decimal dSocketContent_New = 0;
-                    decimal dLengthContent_New = 0;
-                    decimal dProgressionStep_New = 0;
-                    string sProgression_New = string.Empty;
-                    string sSearch_New = string.Empty;
-                    string sModify_New = string.Empty;
+                    string sLengthContent_New = string.Empty;
+                    decimal dSocketContent_New = 0;                    
+                    decimal dPortContent_New = 0;
+                    decimal dProgressionStep_New = 0;                    
+                    int iProgressionCount = 0;                    
                     bool bIsExecute;
-                    bool bAppointHeader, bAppointSocket, bAppointLength;
+                    bool bAppointHeader, bAppointSocket, bAppointLength, bAppointPort;
+                    StringBuilder sbProgression = new StringBuilder();
+                    StringBuilder sbSearch = new StringBuilder();
+                    StringBuilder sbModify = new StringBuilder();
 
                     Socket_Cache.Filter.FilterMode FilterMode_New;
                     Socket_Cache.Filter.FilterAction FilterAction_New;
+                    Socket_Cache.Filter.FilterExecuteType FilterExecuteType_New;
+                    Guid SID_New = Guid.Empty;
                     Guid RID_New = Guid.Empty;
                     Socket_Cache.Filter.FilterFunction FilterFunction_New;
                     Socket_Cache.Filter.FilterStartFrom FilterStartFrom_New;
@@ -854,11 +1132,13 @@ namespace WPELibrary
                     bAppointHeader = this.cbFilter_AppointHeader.Checked;
                     bAppointSocket = this.cbFilter_AppointSocket.Checked;
                     bAppointLength = this.cbFilter_AppointLength.Checked;
+                    bAppointPort = this.cbFilter_AppointPort.Checked;
 
                     sHeaderContent_New = this.txtFilter_HeaderContent.Text.Trim();
-                    dSocketContent_New = this.nudFilter_SocketContent.Value;
-                    dLengthContent_New = this.nudFilter_LengthContent.Value;
-                    dProgressionStep_New = this.nudProgressionStep.Value;
+                    sLengthContent_New = this.nudFilter_LengthContent_From.Value.ToString() + "-" + this.nudFilter_LengthContent_To.Value.ToString();
+                    dSocketContent_New = this.nudFilter_SocketContent.Value;                    
+                    dPortContent_New = this.nudFilter_PortContent.Value;
+                    dProgressionStep_New = this.nudProgressionStep.Value;                    
 
                     if (rbFilterMode_Normal.Checked)
                     {
@@ -881,6 +1161,10 @@ namespace WPELibrary
                     {
                         FilterAction_New = Socket_Cache.Filter.FilterAction.Intercept;
                     }
+                    else if (rbFilterAction_Change.Checked)
+                    {
+                        FilterAction_New = Socket_Cache.Filter.FilterAction.Change;
+                    }
                     else if (rbFilterAction_NoModify_Display.Checked)
                     {
                         FilterAction_New = Socket_Cache.Filter.FilterAction.NoModify_Display;
@@ -896,10 +1180,32 @@ namespace WPELibrary
 
                     if (cbFilterAction_Execute.Checked)
                     {
-                        if (cbbFilterAction_Execute.SelectedValue != null)
+                        if (this.cbbFilterAction_ExecuteType.SelectedIndex == 0)
                         {
-                            RID_New = (Guid)cbbFilterAction_Execute.SelectedValue;
+                            FilterExecuteType_New = Socket_Cache.Filter.FilterExecuteType.Send;
+
+                            if (cbbFilterAction_Execute.SelectedValue != null)
+                            {
+                                SID_New = (Guid)cbbFilterAction_Execute.SelectedValue;
+                            }
                         }
+                        else if (this.cbbFilterAction_ExecuteType.SelectedIndex == 1)
+                        {
+                            FilterExecuteType_New = Socket_Cache.Filter.FilterExecuteType.Robot;
+
+                            if (cbbFilterAction_Execute.SelectedValue != null)
+                            {
+                                RID_New = (Guid)cbbFilterAction_Execute.SelectedValue;
+                            }
+                        }
+                        else
+                        {
+                            FilterExecuteType_New = new Socket_Cache.Filter.FilterExecuteType();
+                        }
+                    }
+                    else
+                    {
+                        FilterExecuteType_New = new Socket_Cache.Filter.FilterExecuteType();
                     }
 
                     FilterFunction_New.Send = this.cbFilterFunction_Send.Checked;
@@ -918,7 +1224,7 @@ namespace WPELibrary
                     else
                     {
                         FilterStartFrom_New = Socket_Cache.Filter.FilterStartFrom.Position;
-                    }
+                    }                    
 
                     switch (FilterMode_New)
                     {
@@ -928,7 +1234,7 @@ namespace WPELibrary
                             {
                                 if (dgvFilterNormal.Rows[1].Cells[i].Style.BackColor == Color.DarkRed)
                                 {
-                                    sProgression_New += i.ToString() + ",";
+                                    sbProgression.Append(i).Append(",");
                                 }
 
                                 if (dgvFilterNormal.Rows[0].Cells[i].Value != null)
@@ -937,7 +1243,7 @@ namespace WPELibrary
 
                                     if (!String.IsNullOrEmpty(sSearchValue))
                                     {
-                                        sSearch_New += i.ToString() + "|" + sSearchValue + ",";
+                                        sbSearch.Append(i).Append("|").Append(sSearchValue).Append(",");
                                     }
                                 }
 
@@ -947,7 +1253,7 @@ namespace WPELibrary
 
                                     if (!String.IsNullOrEmpty(sModifyValue))
                                     {
-                                        sModify_New += i.ToString() + "|" + sModifyValue + ",";
+                                        sbModify.Append(i).Append("|").Append(sModifyValue).Append(",");
                                     }
                                 }
                             }
@@ -967,7 +1273,7 @@ namespace WPELibrary
 
                                 if (!String.IsNullOrEmpty(sValue))
                                 {
-                                    sSearch_New += i.ToString() + "|" + sValue + ",";
+                                    sbSearch.Append(i).Append("|").Append(sValue).Append(",");
                                 }
                             }
 
@@ -979,7 +1285,7 @@ namespace WPELibrary
                                     {
                                         if (dgvFilterAdvanced_Modify_FromHead.Rows[0].Cells[i].Style.BackColor == Color.DarkRed)
                                         {
-                                            sProgression_New += i.ToString() + ",";
+                                            sbProgression.Append(i).Append(",");
                                         }
 
                                         if (dgvFilterAdvanced_Modify_FromHead.Rows[0].Cells[i].Value != null)
@@ -988,7 +1294,7 @@ namespace WPELibrary
 
                                             if (!String.IsNullOrEmpty(sValue))
                                             {
-                                                sModify_New += i.ToString() + "|" + sValue + ",";
+                                                sbModify.Append(i).Append("|").Append(sValue).Append(",");
                                             }
                                         }
                                     }
@@ -999,20 +1305,20 @@ namespace WPELibrary
 
                                     for (int i = 0; i < this.dgvFilterAdvanced_Modify_FromPosition.Columns.Count; i++)
                                     {
+                                        int iIndex = int.Parse(dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].OwningColumn.HeaderText);
+
                                         if (dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Style.BackColor == Color.DarkRed)
-                                        {
-                                            int iIndex = int.Parse(dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].OwningColumn.HeaderText);
-                                            sProgression_New += iIndex + ",";
+                                        {                                            
+                                            sbProgression.Append(iIndex).Append(",");
                                         }
 
                                         if (dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Value != null)
                                         {
-                                            int iIndex = int.Parse(dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].OwningColumn.HeaderText);
                                             string sValue = dgvFilterAdvanced_Modify_FromPosition.Rows[0].Cells[i].Value.ToString().Trim();
 
                                             if (!String.IsNullOrEmpty(sValue))
                                             {
-                                                sModify_New += iIndex + "|" + sValue + ",";
+                                                sbModify.Append(iIndex).Append("|").Append(sValue).Append(",");
                                             }
                                         }
                                     }
@@ -1023,9 +1329,9 @@ namespace WPELibrary
                             break;
                     }
 
-                    sProgression_New = sProgression_New.TrimEnd(',');
-                    sSearch_New = sSearch_New.TrimEnd(',');
-                    sModify_New = sModify_New.TrimEnd(',');
+                    string sProgression_New = sbProgression.ToString().TrimEnd(',');
+                    string sSearch_New = sbSearch.ToString().TrimEnd(',');
+                    string sModify_New = sbModify.ToString().TrimEnd(',');
 
                     Socket_Cache.Filter.UpdateFilter_ByFilterIndex(
                         this.FilterIndex,
@@ -1035,15 +1341,20 @@ namespace WPELibrary
                         bAppointSocket,
                         dSocketContent_New,
                         bAppointLength,
-                        dLengthContent_New,
+                        sLengthContent_New,
+                        bAppointPort,
+                        dPortContent_New,
                         FilterMode_New,
                         FilterAction_New,
                         bIsExecute,
+                        FilterExecuteType_New,
+                        SID_New,
                         RID_New,
                         FilterFunction_New,
                         FilterStartFrom_New,
                         dProgressionStep_New,
                         sProgression_New,
+                        iProgressionCount,
                         sSearch_New,
                         sModify_New);
 
@@ -1158,40 +1469,6 @@ namespace WPELibrary
                         dgv.CurrentCell.Selected = false;
 
                         break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
-        }
-
-        private void PastePacketData(DataGridView dgv, string sData)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(sData) && Socket_Operation.IsHexString(sData))
-                {
-                    string[] DataCells = sData.Split(' ');
-
-                    int iRow = dgv.CurrentCell.RowIndex;
-                    int iCol = dgv.CurrentCell.ColumnIndex;
-
-                    for (int i = 0; i < DataCells.Length; i++)
-                    {
-                        if (iCol + i < dgv.ColumnCount)
-                        {
-                            dgv[iCol + i, iRow].Value = Convert.ChangeType(DataCells[i].ToUpper(), dgv[iCol + i, iRow].ValueType);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-                else
-                {  
-                    Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_42));
                 }
             }
             catch (Exception ex)

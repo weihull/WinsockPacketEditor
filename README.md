@@ -85,4 +85,12 @@ This software uses Microsoft's VS2022 integrated development environment NET Fra
 
 ## 软件界面 Software UI
 
-![WPE64](https://github.com/user-attachments/assets/a43d5593-3b25-4c91-8a9b-c7d592912454)
+![Proxy](https://github.com/user-attachments/assets/ba1bfe80-3c1c-4839-aa68-24aa5ddb4738)
+
+![Process](https://github.com/user-attachments/assets/6bfe3e16-cfc0-42c3-987c-26724363adb2)
+
+![111](https://github.com/user-attachments/assets/cb9c6c4d-e742-4789-beb0-94288b105194)
+![222](https://github.com/user-attachments/assets/54b81cbb-73b8-43e1-ac49-2368be7a3eb8)
+
+
+

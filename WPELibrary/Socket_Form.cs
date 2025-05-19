@@ -4,13 +4,11 @@ using System.Reflection;
 using WPELibrary.Lib;
 using EasyHook;
 using Be.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 using System.IO;
 using System.Xml.Linq;
 using System.Text;
 using WPELibrary.Lib.NativeMethods;
-using System.Threading.Tasks;
 using System.Data;
 using System.Threading;
 
@@ -18,24 +16,40 @@ namespace WPELibrary
 {
     public partial class Socket_Form : Form
     {
+        private readonly Socket_Cache.System.SystemMode RunMode = Socket_Cache.System.SystemMode.Process;
         private bool bWakeUp = true;
         private readonly ToolTip tt = new ToolTip();
         private readonly WinSockHook ws = new WinSockHook();
 
         #region//加载窗体
 
-        public Socket_Form(string sLanguage)
+        public Socket_Form()
         {
             try
             {
-                MultiLanguage.SetDefaultLanguage(sLanguage);
+                Socket_Cache.System.LoadSystemConfig_FromDB();
+                MultiLanguage.SetDefaultLanguage(Socket_Cache.System.DefaultLanguage);                
+
                 InitializeComponent();
-                this.InitSocketDGV();
+
+                Socket_Cache.System.InvokeAction = action =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(action);
+                    }
+                    else
+                    {
+                        action();
+                    }
+                };
+
+                this.InitSocketDGV();                
             }
             catch (Exception ex)
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);                
-            }
+            }            
         }
 
         #endregion
@@ -46,13 +60,16 @@ namespace WPELibrary
         {
             this.InitSocketForm();
             this.InitHexBox_XOR();
-
             this.LoadConfigs_Parameter();
-            Socket_Operation.LoadSystemList();
+            
             Socket_Operation.RegisterHotKey();
+            Socket_Operation.StartRemoteMGT();
+
+            Socket_Cache.System.LoadSystemList_FromDB();
+            Socket_Cache.ProxyAccount.LoadProxyAccountList_FromDB();
         }
 
-        private void DLL_Form_FormClosed(object sender, FormClosedEventArgs e)
+        private void Socket_Form_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.ExitMainForm();
         }
@@ -109,8 +126,12 @@ namespace WPELibrary
 
                 this.SaveConfigs_Parameter();
                 this.niWPE.Visible = false;
-                Socket_Operation.SaveSystemList();
+                
                 Socket_Operation.UnregisterHotKey();
+                Socket_Operation.StopRemoteMGT(this.RunMode);
+                Socket_Cache.System.SaveSystemList_ToDB();
+                Socket_Cache.System.SaveRunConfig_ToDB(this.RunMode);
+                Socket_Cache.ProxyAccount.SaveProxyAccountList_ToDB(this.RunMode);                
             }
             catch (Exception ex)
             {
@@ -152,7 +173,7 @@ namespace WPELibrary
         {
             try
             {
-                this.Text = Socket_Cache.WPE + " - " + Socket_Operation.AssemblyVersion;
+                this.Text = Socket_Cache.System.WPE + " - " + Socket_Operation.AssemblyVersion;
 
                 tt.SetToolTip(cbWorkingMode_Speed, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_22));
                 tt.SetToolTip(rbFilterSet_Priority, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_63));
@@ -160,10 +181,10 @@ namespace WPELibrary
                 tt.SetToolTip(bSearch, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_25));
                 tt.SetToolTip(bSearchNext, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_26));
 
-                Socket_Cache.MainHandle = this.Handle;
+                Socket_Cache.System.MainHandle = this.Handle;
                 string sProcessName = Socket_Operation.GetProcessName();
                 this.tsslProcessName.Text = sProcessName;
-                this.niWPE.Text = Socket_Cache.WPE + "\r\n" + sProcessName;
+                this.niWPE.Text = Socket_Cache.System.WPE + "\r\n" + sProcessName;
                 
                 this.tSocketInfo.Enabled = true;
                 this.tSocketList.Enabled = true;
@@ -176,6 +197,9 @@ namespace WPELibrary
                 this.cmsIcon_StartHook.Enabled = true;
                 this.cmsIcon_StopHook.Enabled = false;
                 this.cbbExtraction.SelectedIndex = 0;
+
+                this.InitFilterActionColor();
+                Socket_Operation.InitCPUAndMemoryCounter();
 
                 this.tsslTotalBytes.Text = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_31), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_SendBytes), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_RecvBytes));
 
@@ -241,13 +265,13 @@ namespace WPELibrary
 
         #endregion        
 
-        #region//加载系统参数
+        #region//加载本界面的运行配置
 
         private void LoadConfigs_Parameter()
         {
             try
             {
-                Socket_Operation.LoadConfigs_SocketPacket();
+                Socket_Cache.System.LoadRunConfig_FromDB();
 
                 cbHookWS1_Send.Checked = Socket_Cache.SocketPacket.HookWS1_Send;
                 cbHookWS1_SendTo.Checked = Socket_Cache.SocketPacket.HookWS1_SendTo;
@@ -290,23 +314,25 @@ namespace WPELibrary
                 this.nudSocketList_AutoClearValue.Value = Socket_Cache.SocketList.AutoClear_Value;
                 this.SocketList_AutoClearChange();
 
-                this.cbLogList_AutoRoll.Checked = Socket_Cache.LogList.AutoRoll;
-                this.cbLogList_AutoClear.Checked = Socket_Cache.LogList.AutoClear;
-                this.nudLogList_AutoClearValue.Value = Socket_Cache.LogList.AutoClear_Value;
+                this.cbLogList_AutoRoll.Checked = Socket_Cache.LogList.Socket_AutoRoll;
+                this.cbLogList_AutoClear.Checked = Socket_Cache.LogList.Socket_AutoClear;
+                this.nudLogList_AutoClearValue.Value = Socket_Cache.LogList.Socket_AutoClear_Value;
                 this.LogList_AutoClearChange();                
 
                 this.cbWorkingMode_Speed.Checked = Socket_Cache.SocketPacket.SpeedMode;
 
-                switch (Socket_Cache.FilterList.FilterList_Execute)
+                switch (Socket_Cache.Filter.FilterExecute)
                 {
-                    case Socket_Cache.FilterList.Execute.Priority:
+                    case Socket_Cache.Filter.Execute.Priority:
                         this.rbFilterSet_Priority.Checked = true;
                         break;
 
-                    case Socket_Cache.FilterList.Execute.Sequence:
+                    case Socket_Cache.Filter.Execute.Sequence:
                         this.rbFilterSet_Sequence.Checked = true;
                         break;
-                }                
+                }
+
+                Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_35));
             }
             catch (Exception ex)
             {
@@ -316,7 +342,7 @@ namespace WPELibrary
 
         #endregion
 
-        #region//保存系统参数
+        #region//保存本页面运行配置
 
         private void SaveConfigs_Parameter()
         {
@@ -354,22 +380,20 @@ namespace WPELibrary
                 Socket_Cache.SocketList.AutoClear = this.cbSocketList_AutoClear.Checked;
                 Socket_Cache.SocketList.AutoClear_Value = this.nudSocketList_AutoClearValue.Value;
 
-                Socket_Cache.LogList.AutoRoll = this.cbLogList_AutoRoll.Checked;
-                Socket_Cache.LogList.AutoClear = this.cbLogList_AutoClear.Checked;
-                Socket_Cache.LogList.AutoClear_Value = this.nudLogList_AutoClearValue.Value;                
+                Socket_Cache.LogList.Socket_AutoRoll = this.cbLogList_AutoRoll.Checked;
+                Socket_Cache.LogList.Socket_AutoClear = this.cbLogList_AutoClear.Checked;
+                Socket_Cache.LogList.Socket_AutoClear_Value = this.nudLogList_AutoClearValue.Value;                
 
                 Socket_Cache.SocketPacket.SpeedMode = this.cbWorkingMode_Speed.Checked;            
 
                 if (this.rbFilterSet_Priority.Checked)
                 {
-                    Socket_Cache.FilterList.FilterList_Execute = Socket_Cache.FilterList.Execute.Priority;
+                    Socket_Cache.Filter.FilterExecute = Socket_Cache.Filter.Execute.Priority;
                 }
                 else
                 {
-                    Socket_Cache.FilterList.FilterList_Execute = Socket_Cache.FilterList.Execute.Sequence;
+                    Socket_Cache.Filter.FilterExecute = Socket_Cache.Filter.Execute.Sequence;
                 }
-
-                Socket_Operation.SaveConfigs_SocketPacket();
             }
             catch (Exception ex)
             {
@@ -523,6 +547,30 @@ namespace WPELibrary
             }
         }
 
+        private void AutoScrollDataGridView(DataGridView dgv, bool autoScroll)
+        {
+            if (autoScroll && !dgv.IsDisposed)
+            {
+                if (dgv.InvokeRequired)
+                {
+                    dgv.Invoke(new Action(() =>
+                    {
+                        if (dgv.Rows.Count > 0 && dgv.Height > dgv.RowTemplate.Height)
+                        {
+                            dgv.FirstDisplayedScrollingRowIndex = dgv.RowCount - 1;
+                        }
+                    }));
+                }
+                else
+                {
+                    if (dgv.Rows.Count > 0 && dgv.Height > dgv.RowTemplate.Height)
+                    {
+                        dgv.FirstDisplayedScrollingRowIndex = dgv.RowCount - 1;
+                    }
+                }
+            }
+        }
+
         #endregion        
 
         #region//系统设置
@@ -534,16 +582,24 @@ namespace WPELibrary
 
         private void TopMostCheckedChanged()
         {
+            this.TopMost = this.cbTopMost.Checked;
+        }
+
+        private void InitFilterActionColor()
+        {
             try
             {
-                if (this.cbTopMost.Checked)
-                {
-                    this.TopMost = true;
-                }
-                else
-                {
-                    this.TopMost = false;
-                }
+                this.lFAColor_Replace.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Replace;
+                this.lFAColor_Replace.BackColor = Socket_Cache.Filter.FilterActionBackColor_Replace;
+
+                this.lFAColor_Intercept.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Intercept;
+                this.lFAColor_Intercept.BackColor = Socket_Cache.Filter.FilterActionBackColor_Intercept;
+
+                this.lFAColor_Change.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Change;
+                this.lFAColor_Change.BackColor = Socket_Cache.Filter.FilterActionBackColor_Change;
+
+                this.lFAColor_Other.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Other;
+                this.lFAColor_Other.BackColor = Socket_Cache.Filter.FilterActionBackColor_Other;
             }
             catch (Exception ex)
             {
@@ -575,7 +631,17 @@ namespace WPELibrary
                 Socket_Cache.SocketPacket.TotalPackets = 0;
                 Socket_Cache.SocketPacket.Total_SendBytes = 0;
                 Socket_Cache.SocketPacket.Total_RecvBytes = 0;
-                Socket_Cache.Filter.FilterExecute_CNT = 0;              
+                Socket_Cache.Filter.FilterExecute_CNT = 0;
+
+                Socket_Cache.SocketQueue.FilterSocketList_CNT = 0;
+                Socket_Cache.SocketQueue.Send_CNT = 0;
+                Socket_Cache.SocketQueue.Recv_CNT = 0;
+                Socket_Cache.SocketQueue.SendTo_CNT = 0;
+                Socket_Cache.SocketQueue.RecvFrom_CNT = 0;
+                Socket_Cache.SocketQueue.WSASend_CNT = 0;
+                Socket_Cache.SocketQueue.WSARecv_CNT = 0;
+                Socket_Cache.SocketQueue.WSASendTo_CNT = 0;
+                Socket_Cache.SocketQueue.WSARecvFrom_CNT = 0;
             }
             catch (Exception ex)
             {
@@ -589,19 +655,8 @@ namespace WPELibrary
             {
                 Socket_Cache.SocketQueue.ResetSocketQueue();
                 Socket_Cache.SocketList.lstRecPacket.Clear();
-
                 Socket_Cache.SocketList.Select_Index = -1;
-                this.dgvSocketList.Rows.Clear();
-
-                Socket_Cache.SocketQueue.FilterSocketList_CNT = 0;
-                Socket_Cache.SocketQueue.Send_CNT = 0;
-                Socket_Cache.SocketQueue.Recv_CNT = 0;
-                Socket_Cache.SocketQueue.SendTo_CNT = 0;
-                Socket_Cache.SocketQueue.RecvFrom_CNT = 0;
-                Socket_Cache.SocketQueue.WSASend_CNT = 0;
-                Socket_Cache.SocketQueue.WSARecv_CNT = 0;
-                Socket_Cache.SocketQueue.WSASendTo_CNT = 0;
-                Socket_Cache.SocketQueue.WSARecvFrom_CNT = 0;
+                this.dgvSocketList.Rows.Clear();                
             }
             catch(Exception ex)
             {
@@ -613,8 +668,8 @@ namespace WPELibrary
         {
             try
             {
-                Socket_Cache.LogQueue.ResetLogQueue(Socket_Cache.LogType.Socket);
-                Socket_Cache.LogList.ResetLogList(Socket_Cache.LogType.Socket);
+                Socket_Cache.LogQueue.ResetLogQueue(Socket_Cache.System.LogType.Socket);
+                Socket_Cache.LogList.ResetLogList(Socket_Cache.System.LogType.Socket);
                 this.dgvLogList.Rows.Clear();             
             }
             catch (Exception ex)
@@ -789,8 +844,7 @@ namespace WPELibrary
             try
             {
                 this.tlTotal_CNT.Text = Socket_Cache.SocketPacket.TotalPackets.ToString();
-                this.tlFilterExecute_CNT.Text = Socket_Cache.Filter.FilterExecute_CNT.ToString();
-                this.tsslTotalBytes.Text = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_31), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_SendBytes), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_RecvBytes));
+                this.tlFilterExecute_CNT.Text = Socket_Cache.Filter.FilterExecute_CNT.ToString();                
                 this.tlQueue_CNT.Text = Socket_Cache.SocketQueue.qSocket_PacketInfo.Count.ToString();
                 this.tlFilterSocketList_CNT.Text = Socket_Cache.SocketQueue.FilterSocketList_CNT.ToString();
                 this.tlSend_CNT.Text = Socket_Cache.SocketQueue.Send_CNT.ToString();
@@ -801,6 +855,9 @@ namespace WPELibrary
                 this.tlWSARecv_CNT.Text = Socket_Cache.SocketQueue.WSARecv_CNT.ToString();
                 this.tlWSASendTo_CNT.Text = Socket_Cache.SocketQueue.WSASendTo_CNT.ToString();
                 this.tlWSARecvFrom_CNT.Text = Socket_Cache.SocketQueue.WSARecvFrom_CNT.ToString();
+
+                Socket_Cache.SocketPacket.SocketBytesInfo = string.Format(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_31), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_SendBytes), Socket_Operation.GetDisplayBytes(Socket_Cache.SocketPacket.Total_RecvBytes));
+                this.tsslTotalBytes.Text = Socket_Cache.SocketPacket.SocketBytesInfo;
             }
             catch (Exception ex)
             {
@@ -815,30 +872,14 @@ namespace WPELibrary
                 if (Socket_Cache.SocketQueue.qSocket_PacketInfo.Count > 0)
                 {
                     await Socket_Cache.SocketList.SocketToList(Socket_Cache.SocketPacket.PacketData_MaxLen);
-
-                    if (this.cbSocketList_AutoRoll.Checked && !this.dgvSocketList.IsDisposed)
-                    {
-                        if (dgvSocketList.Rows.Count > 0 && dgvSocketList.Height > dgvSocketList.RowTemplate.Height)
-                        {
-                            dgvSocketList.FirstDisplayedScrollingRowIndex = dgvSocketList.RowCount - 1;
-                        }
-                    }
-
+                    this.AutoScrollDataGridView(dgvSocketList, cbSocketList_AutoRoll.Checked);
                     this.AutoCleanUp_SocketList();
                 }
 
                 if (Socket_Cache.LogQueue.qSocket_Log.Count > 0)
                 {
-                    await Socket_Cache.LogList.LogToList(Socket_Cache.LogType.Socket);
-
-                    if (this.cbLogList_AutoRoll.Checked && !this.dgvLogList.IsDisposed)
-                    {
-                        if (dgvLogList.Rows.Count > 0 && dgvLogList.Height > dgvLogList.RowTemplate.Height)
-                        {
-                            dgvLogList.FirstDisplayedScrollingRowIndex = dgvLogList.RowCount - 1;
-                        }
-                    }
-
+                    Socket_Cache.LogList.LogToList(Socket_Cache.System.LogType.Socket);
+                    this.AutoScrollDataGridView(dgvLogList, cbLogList_AutoRoll.Checked);
                     this.AutoCleanUp_LogList();
                 }
             }
@@ -846,7 +887,7 @@ namespace WPELibrary
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
-        }
+        }        
 
         #endregion        
 
@@ -876,14 +917,12 @@ namespace WPELibrary
             {
                 if (e.ColumnIndex == dgvSocketList.Columns["cTypeImg"].Index)
                 {
-                    Socket_Cache.SocketPacket.PacketType ptType = (Socket_Cache.SocketPacket.PacketType)dgvSocketList.Rows[e.RowIndex].Cells["cPacketType"].Value;                    
-                    e.Value = Socket_Cache.SocketPacket.GetImg_ByPacketType(ptType);
+                    e.Value = Socket_Cache.SocketPacket.GetImg_ByPacketType((Socket_Cache.SocketPacket.PacketType)dgvSocketList.Rows[e.RowIndex].Cells["cPacketType"].Value);
                     e.FormattingApplied = true;
                 }
                 else if (e.ColumnIndex == dgvSocketList.Columns["cPacketType"].Index)
                 {
-                    Socket_Cache.SocketPacket.PacketType ptType = (Socket_Cache.SocketPacket.PacketType)dgvSocketList.Rows[e.RowIndex].Cells["cPacketType"].Value;
-                    e.Value = Socket_Cache.SocketPacket.GetName_ByPacketType(ptType);
+                    e.Value = Socket_Cache.SocketPacket.GetName_ByPacketType((Socket_Cache.SocketPacket.PacketType)dgvSocketList.Rows[e.RowIndex].Cells["cPacketType"].Value);
                     e.FormattingApplied = true;
                 }
                 else if (e.ColumnIndex == dgvSocketList.Columns["cPacketID"].Index)
@@ -893,17 +932,22 @@ namespace WPELibrary
                 }
                 else if (e.ColumnIndex == dgvSocketList.Columns["cData"].Index)
                 {
-                    Socket_Cache.Filter.FilterAction faAction = Socket_Cache.SocketList.lstRecPacket[e.RowIndex].FilterAction;
+                    switch (Socket_Cache.SocketList.lstRecPacket[e.RowIndex].FilterAction)
+                    {
+                        case Socket_Cache.Filter.FilterAction.Replace:
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Replace;
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.BackColor = Socket_Cache.Filter.FilterActionBackColor_Replace;
+                            break;
 
-                    if (faAction == Socket_Cache.Filter.FilterAction.Intercept)
-                    {
-                        this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.White;
-                        this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.DarkRed;
-                    }
-                    else if (faAction == Socket_Cache.Filter.FilterAction.Replace)
-                    {
-                        this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.Black;
-                        this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Goldenrod;
+                        case Socket_Cache.Filter.FilterAction.Intercept:
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Intercept;
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.BackColor = Socket_Cache.Filter.FilterActionBackColor_Intercept;
+                            break;
+
+                        case Socket_Cache.Filter.FilterAction.Change:
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Socket_Cache.Filter.FilterActionForeColor_Change;
+                            this.dgvSocketList.Rows[e.RowIndex].DefaultCellStyle.BackColor = Socket_Cache.Filter.FilterActionBackColor_Change;
+                            break;
                     }
                 }
             }
@@ -1021,20 +1065,20 @@ namespace WPELibrary
 
         #region//搜索封包内容（异步）
 
-        private async void bSearch_Click(object sender, EventArgs e)
+        private void bSearch_Click(object sender, EventArgs e)
         {
             Socket_Operation.ShowFindForm();
 
             if (Socket_Cache.SocketList.DoSearch)
             {
                 this.bSearchNext.Focus();
-                await this.SearchSocketListNext();
+                this.SearchSocketListNext();
             }
         }
 
-        private async void bSearchNext_Click(object sender, EventArgs e)
+        private void bSearchNext_Click(object sender, EventArgs e)
         {
-            await this.SearchSocketListNext();
+            this.SearchSocketListNext();
         }
 
         private void HexBox_FindNext()
@@ -1043,18 +1087,12 @@ namespace WPELibrary
             {
                 if (Socket_Cache.SocketList.FindOptions.IsValid)
                 {
-                    if (!IsDisposed)
-                    {
-                        hbPacketData.Invoke(new MethodInvoker(async delegate
-                        {
-                            long res = this.hbPacketData.Find(Socket_Cache.SocketList.FindOptions);
+                    long res = this.hbPacketData.Find(Socket_Cache.SocketList.FindOptions);
 
-                            if (res == -1)
-                            {
-                                Socket_Cache.SocketList.Search_Index += 1;
-                                await this.SearchSocketListNext();
-                            }
-                        }));
+                    if (res == -1)
+                    {
+                        Socket_Cache.SocketList.Search_Index += 1;
+                        this.SearchSocketListNext();
                     }
                 }
             }
@@ -1064,7 +1102,15 @@ namespace WPELibrary
             }
         }
 
-        private async Task SearchSocketListNext()
+        private void SearchSocketListNext()
+        {
+            if (!this.bgwSearch.IsBusy)
+            {
+                this.bgwSearch.RunWorkerAsync();
+            }
+        }
+
+        private void bgwSearch_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             try
             {
@@ -1072,53 +1118,61 @@ namespace WPELibrary
                 {
                     if (Socket_Cache.SocketList.FindOptions.IsValid)
                     {
-                        string sSearch_Text = string.Empty;
-                        string sSearch_Type = string.Empty;
-
+                        byte[] bSearchContent = null;
                         FindType fType = Socket_Cache.SocketList.FindOptions.Type;
-
                         Socket_Cache.SocketPacket.EncodingFormat efFormat = new Socket_Cache.SocketPacket.EncodingFormat();
 
                         switch (fType)
                         {
                             case FindType.Text:
                                 efFormat = Socket_Cache.SocketPacket.EncodingFormat.UTF7;
-                                sSearch_Text = Socket_Cache.SocketList.FindOptions.Text;
+                                bSearchContent = Socket_Operation.StringToBytes(efFormat, Socket_Cache.SocketList.FindOptions.Text);
                                 break;
 
                             case FindType.Hex:
                                 efFormat = Socket_Cache.SocketPacket.EncodingFormat.Hex;
-                                byte[] bSearch_Hex = Socket_Cache.SocketList.FindOptions.Hex;
-                                sSearch_Text = Socket_Operation.BytesToString(Socket_Cache.SocketPacket.EncodingFormat.Hex, bSearch_Hex);
+                                bSearchContent = Socket_Cache.SocketList.FindOptions.Hex;
                                 break;
                         }
 
                         if (rbFromHead.Checked)
                         {
-                            Socket_Cache.SocketList.Search_Index = 0;
-                            this.rbFromIndex.Checked = true;
-                            this.hbPacketData.SelectionStart = 0;
+                            this.Invoke(new MethodInvoker(() =>
+                            {
+                                this.rbFromIndex.Checked = true;
+                                this.hbPacketData.SelectionStart = 0;
+                                Socket_Cache.SocketList.Search_Index = 0;
+                            }));
                         }
 
-                        int iIndex = await Socket_Cache.SocketList.FindSocketList(efFormat, Socket_Cache.SocketList.Search_Index, sSearch_Text, Socket_Cache.SocketList.FindOptions.MatchCase);
-
-                        if (iIndex >= 0)
-                        {
-                            this.dgvSocketList.Rows[iIndex].Selected = true;
-                            this.dgvSocketList.CurrentCell = dgvSocketList.Rows[iIndex].Cells[0];
-
-                            this.HexBox_FindNext();
-                        }
-                        else
-                        {
-                            Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_23));
-                        }
+                        e.Result = Socket_Cache.SocketList.SearchForSocketList(Socket_Cache.SocketList.Search_Index, bSearchContent);
                     }
                 }
             }
             catch (Exception ex)
             {
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
+            }
+        }
+
+        private void bgwSearch_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error == null && !e.Cancelled)
+            {
+                int iSearchResultIndex = (int)e.Result;
+
+                if (iSearchResultIndex >= 0)
+                {
+                    this.dgvSocketList.Rows[iSearchResultIndex].Selected = true;
+                    this.dgvSocketList.CurrentCell = dgvSocketList.Rows[iSearchResultIndex].Cells[0];
+                    Socket_Cache.SocketList.Search_Index = iSearchResultIndex;
+
+                    this.HexBox_FindNext();
+                }
+                else
+                {
+                    Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_23));
+                }
             }
         }
 
@@ -1127,6 +1181,11 @@ namespace WPELibrary
         #region//显示封包数据        
 
         private void dgvSocketInfo_SelectionChanged(object sender, EventArgs e)
+        {
+            this.ShowSelectSocketData();
+        }
+
+        private void ShowSelectSocketData()
         {
             try
             {
@@ -1146,7 +1205,7 @@ namespace WPELibrary
                         else
                         {
                             hbPacketData.ByteProvider = null;
-                        }                        
+                        }
                     }
                 }
             }
@@ -1387,7 +1446,7 @@ namespace WPELibrary
 
                         if (Socket_Cache.SocketList.Select_Index > -1)
                         {
-                            Socket_Cache.SystemSocket = Socket_Cache.SocketList.lstRecPacket[Socket_Cache.SocketList.Select_Index].PacketSocket;
+                            Socket_Cache.System.SystemSocket = Socket_Cache.SocketList.lstRecPacket[Socket_Cache.SocketList.Select_Index].PacketSocket;
                         }
 
                         break;                        
@@ -1458,31 +1517,31 @@ namespace WPELibrary
                         switch (sItemText)
                         {
                             case "cmsFilterList_Top":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Top, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Top, iFIndex);
                                 break;
 
                             case "cmsFilterList_Up":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Up, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Up, iFIndex);
                                 break;
 
                             case "cmsFilterList_Down":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Down, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Down, iFIndex);
                                 break;
 
                             case "cmsFilterList_Bottom":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Bottom, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Bottom, iFIndex);
                                 break;
 
                             case "cmsFilterList_Copy":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Copy, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Copy, iFIndex);
                                 break;
 
                             case "cmsFilterList_Export":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Export, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Export, iFIndex);
                                 break;
 
                             case "cmsFilterList_Delete":
-                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.ListAction.Delete, iFIndex);
+                                iIndex = Socket_Cache.FilterList.UpdateFilterList_ByListAction(Socket_Cache.System.ListAction.Delete, iFIndex);
                                 break;
                         }
 
@@ -1522,31 +1581,31 @@ namespace WPELibrary
                         switch (sItemText)
                         {
                             case "cmsSendList_Top":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Top, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Top, iSIndex);
                                 break;
 
                             case "cmsSendList_Up":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Up, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Up, iSIndex);
                                 break;
 
                             case "cmsSendList_Down":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Down, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Down, iSIndex);
                                 break;
 
                             case "cmsSendList_Bottom":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Bottom, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Bottom, iSIndex);
                                 break;
 
                             case "cmsSendList_Copy":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Copy, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Copy, iSIndex);
                                 break;
 
                             case "cmsSendList_Export":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Export, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Export, iSIndex);
                                 break;
 
                             case "cmsSendList_Delete":
-                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.ListAction.Delete, iSIndex);
+                                iIndex = Socket_Cache.SendList.UpdateSendList_ByListAction(Socket_Cache.System.ListAction.Delete, iSIndex);
                                 break;
                         }
 
@@ -1586,31 +1645,31 @@ namespace WPELibrary
                         switch (sItemText)
                         {
                             case "cmsRobotList_Top":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Top, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Top, iRIndex);
                                 break;
 
                             case "cmsRobotList_Up":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Up, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Up, iRIndex);
                                 break;
 
                             case "cmsRobotList_Down":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Down, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Down, iRIndex);
                                 break;
 
                             case "cmsRobotList_Bottom":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Bottom, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Bottom, iRIndex);
                                 break;
 
                             case "cmsRobotList_Copy":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Copy, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Copy, iRIndex);
                                 break;
 
                             case "cmsRobotList_Export":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Export, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Export, iRIndex);
                                 break;
 
                             case "cmsRobotList_Delete":
-                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.ListAction.Delete, iRIndex);
+                                iIndex = Socket_Cache.RobotList.UpdateRobotList_ByListAction(Socket_Cache.System.ListAction.Delete, iRIndex);
                                 break;
                         }
 
@@ -1881,18 +1940,21 @@ namespace WPELibrary
                     {
                         Socket_Send ss = Socket_Cache.Send.DoSend(ssi.SID);
 
-                        while (ss.Worker.IsBusy)
+                        if (ss != null)
                         {
-                            if (this.bgwSendList.CancellationPending)
-                            { 
-                                ss.StopSend();
+                            while (ss.Worker.IsBusy)
+                            {
+                                if (this.bgwSendList.CancellationPending)
+                                {
+                                    ss.StopSend();
 
-                                e.Cancel = true;
-                                return;
+                                    e.Cancel = true;
+                                    return;
+                                }
+
+                                Thread.Sleep(100);
                             }
-
-                            Thread.Sleep(100);
-                        }
+                        }                        
                     }
                 }
             }
@@ -2022,18 +2084,21 @@ namespace WPELibrary
                     {
                         Socket_Robot sr = Socket_Cache.Robot.DoRobot(sri.RID);
 
-                        while (sr.Worker.IsBusy)
+                        if (sr != null) 
                         {
-                            if (this.bgwRobotList.CancellationPending)
+                            while (sr.Worker.IsBusy)
                             {
-                                sr.StopRobot();
+                                if (this.bgwRobotList.CancellationPending)
+                                {
+                                    sr.StopRobot();
 
-                                e.Cancel = true;
-                                return;
+                                    e.Cancel = true;
+                                    return;
+                                }
+
+                                Thread.Sleep(100);
                             }
-
-                            Thread.Sleep(100);
-                        }
+                        }                        
                     }
                 }
             }
@@ -2232,46 +2297,43 @@ namespace WPELibrary
                 this.hbXOR_To.ByteProvider = new DynamicByteProvider(new byte[0]);
 
                 DynamicByteProvider dbpXOR_From = this.hbXOR_From.ByteProvider as DynamicByteProvider;
+                if (dbpXOR_From == null)
+                {
+                    return;
+                }
+
                 byte[] blXOR_From = dbpXOR_From.Bytes.ToArray();
 
                 string sXOR_Value = this.txtXOR.Text.Trim();
                 string[] slXOR_Value = sXOR_Value.Split(' ');
 
-                if (blXOR_From != null && blXOR_From.Length > 0 && !string.IsNullOrEmpty(sXOR_Value) && slXOR_Value.Length > 0)
+                if (blXOR_From.Length == 0 || string.IsNullOrEmpty(sXOR_Value) || slXOR_Value.Length == 0)
                 {
-                    int j = 0;
+                    return;
+                }
 
-                    byte[] blXOR_To = new byte[blXOR_From.Length];
+                byte[] blXOR_To = new byte[blXOR_From.Length];
+                int j = 0;
 
-                    for (int i = 0; i < blXOR_From.Length; i++)
+                foreach (byte bXOR_From in blXOR_From)
+                {
+                    if (j == slXOR_Value.Length)
                     {
-                        if (j == slXOR_Value.Length)
-                        {
-                            j = 0;
-                        }
-
-                        byte bXOR_From = blXOR_From[i];
-
-                        byte bXOR_Value = new byte();
-
-                        bool bOK = Byte.TryParse(slXOR_Value[j], System.Globalization.NumberStyles.HexNumber, null, out bXOR_Value);
-
-                        if (bOK)
-                        {
-                            blXOR_To[i] = (byte)(bXOR_From ^ bXOR_Value);
-
-                            j++;
-                        }
-                        else
-                        {
-                            Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_21));
-                            return;
-                        }
+                        j = 0;
                     }
 
-                    DynamicByteProvider dbpXOR_To = new DynamicByteProvider(blXOR_To);
-                    hbXOR_To.ByteProvider = dbpXOR_To;
-                }                
+                    if (!Byte.TryParse(slXOR_Value[j], System.Globalization.NumberStyles.HexNumber, null, out byte bXOR_Value))
+                    {
+                        Socket_Operation.ShowMessageBox(MultiLanguage.GetDefaultLanguage(MultiLanguage.MutiLan_21));
+                        return;
+                    }
+
+                    blXOR_To[j] = (byte)(bXOR_From ^ bXOR_Value);
+                    j++;
+                }
+
+                DynamicByteProvider dbpXOR_To = new DynamicByteProvider(blXOR_To);
+                this.hbXOR_To.ByteProvider = dbpXOR_To;
             }
             catch (Exception ex)
             {
@@ -2605,9 +2667,6 @@ namespace WPELibrary
                 Socket_Operation.DoLog(MethodBase.GetCurrentMethod().Name, ex.Message);
             }
         }
-
-
-
 
         #endregion        
     }

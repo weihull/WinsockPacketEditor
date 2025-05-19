@@ -10,8 +10,7 @@ namespace WinsockPacketEditor
     {
         public static int PID = -1;
         public static string PNAME = string.Empty;
-        public static string PATH = string.Empty;
-        public static Socket_Cache.SystemMode Mode = new Socket_Cache.SystemMode();
+        public static string PATH = string.Empty;        
 
         #region//主函数
 
@@ -31,30 +30,33 @@ namespace WinsockPacketEditor
                
                 System.Security.Principal.WindowsIdentity identity = System.Security.Principal.WindowsIdentity.GetCurrent();
                 System.Security.Principal.WindowsPrincipal principal = new System.Security.Principal.WindowsPrincipal(identity);
-                
+
+                Socket_Cache.DataBase.InitDB();
+                Socket_Cache.System.LoadSystemConfig_FromDB();
+
                 if (principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator))
                 {
                     SystemMode_Form systemMode_Form = new SystemMode_Form();
 
                     if (systemMode_Form.ShowDialog() == DialogResult.OK)
                     {
-                        switch (Mode)
+                        switch (Socket_Cache.System.StartMode)
                         { 
-                            case Socket_Cache.SystemMode.Proxy:
+                            case Socket_Cache.System.SystemMode.Proxy:                                
 
-                                Socket_Form socket_Form = new Socket_Form(Properties.Settings.Default.DefaultLanguage);
+                                Socket_Form socket_Form = new Socket_Form();
                                 socket_Form.Show();
 
                                 Application.Run(new SocketProxy_Form(socket_Form));
 
                                 break;
 
-                            case Socket_Cache.SystemMode.Process:
-
+                            case Socket_Cache.System.SystemMode.Process:        
+                                
                                 Application.Run(new Injector_Form());
 
                                 break;
-                        }
+                        }                        
                     }
                 }
                 else
@@ -84,25 +86,6 @@ namespace WinsockPacketEditor
             }            
         }
 
-        #endregion
-
-        #region//保存默认语言
-
-        public static void SaveDefaultLanguage(string lang)
-        {
-            try
-            {
-                MultiLanguage.SetDefaultLanguage(lang);
-
-                Properties.Settings.Default.DefaultLanguage = lang;
-                Properties.Settings.Default.Save();
-            }
-            catch (Exception ex)
-            {
-                string sError = ex.Message;
-            }
-        }
-
-        #endregion
+        #endregion        
     }
 }

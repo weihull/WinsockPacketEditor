@@ -90,12 +90,32 @@ namespace WPELibrary.Lib
             set { appointlength = value; }
         }
 
-        protected decimal lengthcontent;
+        protected string lengthcontent;
 
-        public decimal LengthContent
+        public string LengthContent
         {
             get { return lengthcontent; }
             set { lengthcontent = value; }
+        }
+
+        #endregion
+
+        #region//指定端口
+
+        protected bool appointport;
+
+        public bool AppointPort
+        {
+            get { return appointport; }
+            set { appointport = value; }
+        }
+
+        protected decimal portcontent;
+
+        public decimal PortContent
+        {
+            get { return portcontent; }
+            set { portcontent = value; }
         }
 
         #endregion
@@ -124,7 +144,7 @@ namespace WPELibrary.Lib
 
         #endregion        
 
-        #region//是否执行机器人
+        #region//是否执行
 
         protected bool isexecute;
 
@@ -135,6 +155,30 @@ namespace WPELibrary.Lib
         }
 
         #endregion
+
+        #region//执行类型
+
+        protected Socket_Cache.Filter.FilterExecuteType fetype;
+
+        public Socket_Cache.Filter.FilterExecuteType FEType
+        {
+            get { return fetype; }
+            set { fetype = value; }
+        }
+
+        #endregion        
+
+        #region//发送序号
+
+        protected Guid sid;
+
+        public Guid SID
+        {
+            get { return sid; }
+            set { sid = value; }
+        }
+
+        #endregion        
 
         #region//机器人序号
 
@@ -255,10 +299,14 @@ namespace WPELibrary.Lib
             bool AppointSocket, 
             decimal SocketContent, 
             bool AppointLength, 
-            decimal LengthContent, 
+            string LengthContent,
+            bool AppointPort,
+            decimal PortContent,
             Socket_Cache.Filter.FilterMode FMode, 
             Socket_Cache.Filter.FilterAction FAction,
             bool IsExecute,
+            Socket_Cache.Filter.FilterExecuteType FEType,
+            Guid SID,
             Guid RID,
             Socket_Cache.Filter.FilterFunction FFunction, 
             Socket_Cache.Filter.FilterStartFrom FStartFrom,
@@ -278,9 +326,13 @@ namespace WPELibrary.Lib
             this.socketcontent = SocketContent;
             this.appointlength = AppointLength;
             this.lengthcontent = LengthContent;
+            this.appointport = AppointPort;
+            this.portcontent = PortContent;
             this.fmode = FMode;
             this.faction = FAction;
             this.isexecute = IsExecute;
+            this.fetype = FEType;
+            this.sid = SID;
             this.rid = RID;
             this.ffunction = FFunction;
             this.fstartfrom = FStartFrom;

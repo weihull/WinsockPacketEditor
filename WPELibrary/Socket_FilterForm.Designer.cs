@@ -49,6 +49,7 @@ namespace WPELibrary
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tlpFilterForm = new System.Windows.Forms.TableLayoutPanel();
             this.tlpFilterButton = new System.Windows.Forms.TableLayoutPanel();
+            this.lFilterInfo = new System.Windows.Forms.Label();
             this.bFilterButton_Save = new System.Windows.Forms.Button();
             this.bFilterButton_Close = new System.Windows.Forms.Button();
             this.tcFilterInfo = new System.Windows.Forms.TabControl();
@@ -74,12 +75,20 @@ namespace WPELibrary
             this.lProgressionStep = new System.Windows.Forms.Label();
             this.gbFilterAppoint = new System.Windows.Forms.GroupBox();
             this.tlpFilterAppoint = new System.Windows.Forms.TableLayoutPanel();
-            this.nudFilter_LengthContent = new System.Windows.Forms.NumericUpDown();
-            this.cbFilter_AppointLength = new System.Windows.Forms.CheckBox();
+            this.tlpFilterAppoint_Socket = new System.Windows.Forms.TableLayoutPanel();
+            this.nudFilter_PortContent = new System.Windows.Forms.NumericUpDown();
+            this.cbFilter_AppointPort = new System.Windows.Forms.CheckBox();
             this.cbFilter_AppointSocket = new System.Windows.Forms.CheckBox();
             this.nudFilter_SocketContent = new System.Windows.Forms.NumericUpDown();
+            this.tlpFilterAppoint_Length = new System.Windows.Forms.TableLayoutPanel();
+            this.nudFilter_LengthContent_To = new System.Windows.Forms.NumericUpDown();
+            this.nudFilter_LengthContent_From = new System.Windows.Forms.NumericUpDown();
+            this.cbFilter_AppointLength = new System.Windows.Forms.CheckBox();
+            this.lAppointLengthSplit = new System.Windows.Forms.Label();
             this.gbFilterAction = new System.Windows.Forms.GroupBox();
             this.tlpFilterAction = new System.Windows.Forms.TableLayoutPanel();
+            this.cbbFilterAction_ExecuteType = new System.Windows.Forms.ComboBox();
+            this.rbFilterAction_Change = new System.Windows.Forms.RadioButton();
             this.cbbFilterAction_Execute = new System.Windows.Forms.ComboBox();
             this.rbFilterAction_Intercept = new System.Windows.Forms.RadioButton();
             this.rbFilterAction_Replace = new System.Windows.Forms.RadioButton();
@@ -113,6 +122,7 @@ namespace WPELibrary
             this.tlpFilterModifyFrom = new System.Windows.Forms.TableLayoutPanel();
             this.rbFilterModifyFrom_Position = new System.Windows.Forms.RadioButton();
             this.rbFilterModifyFrom_Head = new System.Windows.Forms.RadioButton();
+            this.bgwFilterInfo = new System.ComponentModel.BackgroundWorker();
             this.tlpFilterForm.SuspendLayout();
             this.tlpFilterButton.SuspendLayout();
             this.tcFilterInfo.SuspendLayout();
@@ -130,8 +140,12 @@ namespace WPELibrary
             ((System.ComponentModel.ISupportInitialize)(this.nudProgressionStep)).BeginInit();
             this.gbFilterAppoint.SuspendLayout();
             this.tlpFilterAppoint.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent)).BeginInit();
+            this.tlpFilterAppoint_Socket.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_PortContent)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudFilter_SocketContent)).BeginInit();
+            this.tlpFilterAppoint_Length.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent_To)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent_From)).BeginInit();
             this.gbFilterAction.SuspendLayout();
             this.tlpFilterAction.SuspendLayout();
             this.gbFilterFunction.SuspendLayout();
@@ -159,9 +173,16 @@ namespace WPELibrary
             // tlpFilterButton
             // 
             resources.ApplyResources(this.tlpFilterButton, "tlpFilterButton");
+            this.tlpFilterButton.Controls.Add(this.lFilterInfo, 0, 0);
             this.tlpFilterButton.Controls.Add(this.bFilterButton_Save, 1, 0);
             this.tlpFilterButton.Controls.Add(this.bFilterButton_Close, 3, 0);
             this.tlpFilterButton.Name = "tlpFilterButton";
+            // 
+            // lFilterInfo
+            // 
+            resources.ApplyResources(this.lFilterInfo, "lFilterInfo");
+            this.lFilterInfo.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lFilterInfo.Name = "lFilterInfo";
             // 
             // bFilterButton_Save
             // 
@@ -237,6 +258,7 @@ namespace WPELibrary
             this.dgvFilterNormal.RowTemplate.DefaultCellStyle.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvFilterNormal.RowTemplate.Height = 30;
             this.dgvFilterNormal.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DGV_CellFormatting);
+            this.dgvFilterNormal.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dgvFilterNormal_KeyDown);
             // 
             // cmsDGV
             // 
@@ -353,7 +375,7 @@ namespace WPELibrary
             this.dgvFilterAdvanced_Modify_FromPosition.RowTemplate.DefaultCellStyle.Padding = new System.Windows.Forms.Padding(3);
             this.dgvFilterAdvanced_Modify_FromPosition.RowTemplate.Height = 30;
             this.dgvFilterAdvanced_Modify_FromPosition.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DGV_CellFormatting);
-            this.dgvFilterAdvanced_Modify_FromPosition.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dgvFilterAdvanced_Modify_FromPosition_ColumnAdded);
+            this.dgvFilterAdvanced_Modify_FromPosition.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dgvFilterAdvanced_Modify_FromPosition_KeyDown);
             // 
             // dgvFilterAdvanced_Search
             // 
@@ -400,6 +422,7 @@ namespace WPELibrary
             this.dgvFilterAdvanced_Search.RowTemplate.DefaultCellStyle.Padding = new System.Windows.Forms.Padding(3);
             this.dgvFilterAdvanced_Search.RowTemplate.Height = 30;
             this.dgvFilterAdvanced_Search.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DGV_CellFormatting);
+            this.dgvFilterAdvanced_Search.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dgvFilterAdvanced_Search_KeyDown);
             // 
             // dgvFilterAdvanced_Modify_FromHead
             // 
@@ -446,6 +469,7 @@ namespace WPELibrary
             this.dgvFilterAdvanced_Modify_FromHead.RowTemplate.DefaultCellStyle.Padding = new System.Windows.Forms.Padding(3);
             this.dgvFilterAdvanced_Modify_FromHead.RowTemplate.Height = 30;
             this.dgvFilterAdvanced_Modify_FromHead.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DGV_CellFormatting);
+            this.dgvFilterAdvanced_Modify_FromHead.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dgvFilterAdvanced_Modify_FromHead_KeyDown);
             // 
             // tlpFilterParameter
             // 
@@ -509,28 +533,35 @@ namespace WPELibrary
             // tlpFilterAppoint
             // 
             resources.ApplyResources(this.tlpFilterAppoint, "tlpFilterAppoint");
-            this.tlpFilterAppoint.Controls.Add(this.nudFilter_LengthContent, 1, 1);
-            this.tlpFilterAppoint.Controls.Add(this.cbFilter_AppointLength, 0, 1);
-            this.tlpFilterAppoint.Controls.Add(this.cbFilter_AppointSocket, 0, 0);
-            this.tlpFilterAppoint.Controls.Add(this.nudFilter_SocketContent, 1, 0);
+            this.tlpFilterAppoint.Controls.Add(this.tlpFilterAppoint_Socket, 0, 0);
+            this.tlpFilterAppoint.Controls.Add(this.tlpFilterAppoint_Length, 0, 1);
             this.tlpFilterAppoint.Name = "tlpFilterAppoint";
             // 
-            // nudFilter_LengthContent
+            // tlpFilterAppoint_Socket
             // 
-            resources.ApplyResources(this.nudFilter_LengthContent, "nudFilter_LengthContent");
-            this.nudFilter_LengthContent.Maximum = new decimal(new int[] {
+            resources.ApplyResources(this.tlpFilterAppoint_Socket, "tlpFilterAppoint_Socket");
+            this.tlpFilterAppoint_Socket.Controls.Add(this.nudFilter_PortContent, 4, 0);
+            this.tlpFilterAppoint_Socket.Controls.Add(this.cbFilter_AppointPort, 3, 0);
+            this.tlpFilterAppoint_Socket.Controls.Add(this.cbFilter_AppointSocket, 0, 0);
+            this.tlpFilterAppoint_Socket.Controls.Add(this.nudFilter_SocketContent, 1, 0);
+            this.tlpFilterAppoint_Socket.Name = "tlpFilterAppoint_Socket";
+            // 
+            // nudFilter_PortContent
+            // 
+            resources.ApplyResources(this.nudFilter_PortContent, "nudFilter_PortContent");
+            this.nudFilter_PortContent.Maximum = new decimal(new int[] {
             9999999,
             0,
             0,
             0});
-            this.nudFilter_LengthContent.Name = "nudFilter_LengthContent";
+            this.nudFilter_PortContent.Name = "nudFilter_PortContent";
             // 
-            // cbFilter_AppointLength
+            // cbFilter_AppointPort
             // 
-            resources.ApplyResources(this.cbFilter_AppointLength, "cbFilter_AppointLength");
-            this.cbFilter_AppointLength.Name = "cbFilter_AppointLength";
-            this.cbFilter_AppointLength.UseVisualStyleBackColor = true;
-            this.cbFilter_AppointLength.CheckedChanged += new System.EventHandler(this.cbFilter_AppointLength_CheckedChanged);
+            resources.ApplyResources(this.cbFilter_AppointPort, "cbFilter_AppointPort");
+            this.cbFilter_AppointPort.Name = "cbFilter_AppointPort";
+            this.cbFilter_AppointPort.UseVisualStyleBackColor = true;
+            this.cbFilter_AppointPort.CheckedChanged += new System.EventHandler(this.cbFilter_AppointPort_CheckedChanged);
             // 
             // cbFilter_AppointSocket
             // 
@@ -549,6 +580,47 @@ namespace WPELibrary
             0});
             this.nudFilter_SocketContent.Name = "nudFilter_SocketContent";
             // 
+            // tlpFilterAppoint_Length
+            // 
+            resources.ApplyResources(this.tlpFilterAppoint_Length, "tlpFilterAppoint_Length");
+            this.tlpFilterAppoint_Length.Controls.Add(this.nudFilter_LengthContent_To, 3, 0);
+            this.tlpFilterAppoint_Length.Controls.Add(this.nudFilter_LengthContent_From, 1, 0);
+            this.tlpFilterAppoint_Length.Controls.Add(this.cbFilter_AppointLength, 0, 0);
+            this.tlpFilterAppoint_Length.Controls.Add(this.lAppointLengthSplit, 2, 0);
+            this.tlpFilterAppoint_Length.Name = "tlpFilterAppoint_Length";
+            // 
+            // nudFilter_LengthContent_To
+            // 
+            resources.ApplyResources(this.nudFilter_LengthContent_To, "nudFilter_LengthContent_To");
+            this.nudFilter_LengthContent_To.Maximum = new decimal(new int[] {
+            9999999,
+            0,
+            0,
+            0});
+            this.nudFilter_LengthContent_To.Name = "nudFilter_LengthContent_To";
+            // 
+            // nudFilter_LengthContent_From
+            // 
+            resources.ApplyResources(this.nudFilter_LengthContent_From, "nudFilter_LengthContent_From");
+            this.nudFilter_LengthContent_From.Maximum = new decimal(new int[] {
+            9999999,
+            0,
+            0,
+            0});
+            this.nudFilter_LengthContent_From.Name = "nudFilter_LengthContent_From";
+            // 
+            // cbFilter_AppointLength
+            // 
+            resources.ApplyResources(this.cbFilter_AppointLength, "cbFilter_AppointLength");
+            this.cbFilter_AppointLength.Name = "cbFilter_AppointLength";
+            this.cbFilter_AppointLength.UseVisualStyleBackColor = true;
+            this.cbFilter_AppointLength.CheckedChanged += new System.EventHandler(this.cbFilter_AppointLength_CheckedChanged);
+            // 
+            // lAppointLengthSplit
+            // 
+            resources.ApplyResources(this.lAppointLengthSplit, "lAppointLengthSplit");
+            this.lAppointLengthSplit.Name = "lAppointLengthSplit";
+            // 
             // gbFilterAction
             // 
             this.gbFilterAction.Controls.Add(this.tlpFilterAction);
@@ -559,13 +631,32 @@ namespace WPELibrary
             // tlpFilterAction
             // 
             resources.ApplyResources(this.tlpFilterAction, "tlpFilterAction");
-            this.tlpFilterAction.Controls.Add(this.cbbFilterAction_Execute, 1, 3);
+            this.tlpFilterAction.Controls.Add(this.cbbFilterAction_ExecuteType, 1, 3);
+            this.tlpFilterAction.Controls.Add(this.rbFilterAction_Change, 1, 0);
+            this.tlpFilterAction.Controls.Add(this.cbbFilterAction_Execute, 3, 3);
             this.tlpFilterAction.Controls.Add(this.rbFilterAction_Intercept, 0, 1);
             this.tlpFilterAction.Controls.Add(this.rbFilterAction_Replace, 0, 0);
-            this.tlpFilterAction.Controls.Add(this.rbFilterAction_NoModify_Display, 1, 0);
-            this.tlpFilterAction.Controls.Add(this.rbFilterAction_NoModify_NoDisplay, 1, 1);
+            this.tlpFilterAction.Controls.Add(this.rbFilterAction_NoModify_Display, 3, 0);
+            this.tlpFilterAction.Controls.Add(this.rbFilterAction_NoModify_NoDisplay, 3, 1);
             this.tlpFilterAction.Controls.Add(this.cbFilterAction_Execute, 0, 3);
             this.tlpFilterAction.Name = "tlpFilterAction";
+            // 
+            // cbbFilterAction_ExecuteType
+            // 
+            resources.ApplyResources(this.cbbFilterAction_ExecuteType, "cbbFilterAction_ExecuteType");
+            this.cbbFilterAction_ExecuteType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbbFilterAction_ExecuteType.FormattingEnabled = true;
+            this.cbbFilterAction_ExecuteType.Items.AddRange(new object[] {
+            resources.GetString("cbbFilterAction_ExecuteType.Items"),
+            resources.GetString("cbbFilterAction_ExecuteType.Items1")});
+            this.cbbFilterAction_ExecuteType.Name = "cbbFilterAction_ExecuteType";
+            this.cbbFilterAction_ExecuteType.SelectedIndexChanged += new System.EventHandler(this.cbbFilterAction_ExecuteType_SelectedIndexChanged);
+            // 
+            // rbFilterAction_Change
+            // 
+            resources.ApplyResources(this.rbFilterAction_Change, "rbFilterAction_Change");
+            this.rbFilterAction_Change.Name = "rbFilterAction_Change";
+            this.rbFilterAction_Change.UseVisualStyleBackColor = true;
             // 
             // cbbFilterAction_Execute
             // 
@@ -818,6 +909,13 @@ namespace WPELibrary
             this.rbFilterModifyFrom_Head.UseVisualStyleBackColor = true;
             this.rbFilterModifyFrom_Head.CheckedChanged += new System.EventHandler(this.rbFilterModifyFrom_CheckedChanged);
             // 
+            // bgwFilterInfo
+            // 
+            this.bgwFilterInfo.WorkerReportsProgress = true;
+            this.bgwFilterInfo.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwFilterInfo_DoWork);
+            this.bgwFilterInfo.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgwFilterInfo_ProgressChanged);
+            this.bgwFilterInfo.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwFilterInfo_RunWorkerCompleted);
+            // 
             // Socket_FilterForm
             // 
             resources.ApplyResources(this, "$this");
@@ -829,6 +927,7 @@ namespace WPELibrary
             this.TopMost = true;
             this.tlpFilterForm.ResumeLayout(false);
             this.tlpFilterButton.ResumeLayout(false);
+            this.tlpFilterButton.PerformLayout();
             this.tcFilterInfo.ResumeLayout(false);
             this.tpNormal.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvFilterNormal)).EndInit();
@@ -845,9 +944,14 @@ namespace WPELibrary
             ((System.ComponentModel.ISupportInitialize)(this.nudProgressionStep)).EndInit();
             this.gbFilterAppoint.ResumeLayout(false);
             this.tlpFilterAppoint.ResumeLayout(false);
-            this.tlpFilterAppoint.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent)).EndInit();
+            this.tlpFilterAppoint_Socket.ResumeLayout(false);
+            this.tlpFilterAppoint_Socket.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_PortContent)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudFilter_SocketContent)).EndInit();
+            this.tlpFilterAppoint_Length.ResumeLayout(false);
+            this.tlpFilterAppoint_Length.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent_To)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilter_LengthContent_From)).EndInit();
             this.gbFilterAction.ResumeLayout(false);
             this.tlpFilterAction.ResumeLayout(false);
             this.tlpFilterAction.PerformLayout();
@@ -923,11 +1027,6 @@ namespace WPELibrary
         private System.Windows.Forms.RadioButton rbFilterModifyFrom_Position;
         private System.Windows.Forms.RadioButton rbFilterModifyFrom_Head;
         private System.Windows.Forms.GroupBox gbFilterAppoint;
-        private System.Windows.Forms.TableLayoutPanel tlpFilterAppoint;
-        private System.Windows.Forms.CheckBox cbFilter_AppointSocket;
-        private System.Windows.Forms.CheckBox cbFilter_AppointLength;
-        private System.Windows.Forms.NumericUpDown nudFilter_SocketContent;
-        private System.Windows.Forms.NumericUpDown nudFilter_LengthContent;
         private System.Windows.Forms.TableLayoutPanel tlpFilterButton;
         private System.Windows.Forms.Button bFilterButton_Save;
         private System.Windows.Forms.Button bFilterButton_Close;
@@ -940,5 +1039,20 @@ namespace WPELibrary
         private System.Windows.Forms.ToolStripMenuItem cmsDGV_Progression_Disable;
         private System.Windows.Forms.CheckBox cbFilterAction_Execute;
         private System.Windows.Forms.ComboBox cbbFilterAction_Execute;
+        private System.Windows.Forms.RadioButton rbFilterAction_Change;
+        private System.Windows.Forms.ComboBox cbbFilterAction_ExecuteType;
+        private System.ComponentModel.BackgroundWorker bgwFilterInfo;
+        private System.Windows.Forms.Label lFilterInfo;
+        private System.Windows.Forms.TableLayoutPanel tlpFilterAppoint;
+        private System.Windows.Forms.TableLayoutPanel tlpFilterAppoint_Length;
+        private System.Windows.Forms.NumericUpDown nudFilter_LengthContent_From;
+        private System.Windows.Forms.CheckBox cbFilter_AppointLength;
+        private System.Windows.Forms.TableLayoutPanel tlpFilterAppoint_Socket;
+        private System.Windows.Forms.NumericUpDown nudFilter_PortContent;
+        private System.Windows.Forms.CheckBox cbFilter_AppointPort;
+        private System.Windows.Forms.CheckBox cbFilter_AppointSocket;
+        private System.Windows.Forms.NumericUpDown nudFilter_SocketContent;
+        private System.Windows.Forms.NumericUpDown nudFilter_LengthContent_To;
+        private System.Windows.Forms.Label lAppointLengthSplit;
     }
 }
